@@ -1,17 +1,18 @@
 const redis = require('redis');
 class RedisClient {
+  client = null;
   constructor(){
     this.client = redis.createClient();
     this.client.on('error', (error)=>{
       console.log(error);
+      this.client = null;
     })
   }
   isAlive(){
     if (this.client){
       return true;
-    }else{
-      return false;
     }
+      return false;
   }
   async get(key){
     if (this.isAlive()){
