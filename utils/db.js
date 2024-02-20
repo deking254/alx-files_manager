@@ -16,13 +16,15 @@ class DBClient {
     this.client = new MongoClient(this.url);
     }
   isAlive() {
+    let statu = false;
     this.client.connect((error, client)=>{
       if (error){
         return false
       } else {
-        return true
+        statu = true
       }
     })
+	  return statu;
   }
   async nbUsers (){
     if (this.isAlive()){
