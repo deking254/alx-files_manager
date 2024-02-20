@@ -7,7 +7,7 @@ class RedisClient {
     })
   }
   isAlive(){
-    if (this.client){
+    if (this.client.exists(1)){
       return true;
     } else{
       return false;
@@ -25,7 +25,7 @@ class RedisClient {
       return result;
     }
   }
-  async set( key, value, duration){
+  async set(key, value, duration){
     this.client.set(key, value, 'EX', duration); 
   }
   async del(key){
