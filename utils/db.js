@@ -35,7 +35,7 @@ class DBClient {
     let value = 0;
     if (this.isAlive()) {
       const collection = this.database.collection('users');
-      collection.find({}).toArray((err, docs) => {
+      collection.find().toArray((err, docs) => {
         value = docs.length;
       });
     }
@@ -46,7 +46,7 @@ class DBClient {
     let value = 0;
     if (this.isAlive()) {
       const collection = this.database.collection('files');
-      collection.find({}).toArray((err, docs) => {
+      collection.find().toArray((err, docs) => {
         value = docs.length;
       });
     }
