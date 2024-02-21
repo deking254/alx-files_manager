@@ -34,10 +34,8 @@ class DBClient {
   async nbUsers() {
     let value = 0;
     if (this.isAlive()) {
-      const collection = this.database.collection('users');
-      collection.find().toArray((err, docs) => {
-        value = docs.length;
-      });
+      const users = this.database.collection('users');
+      value = await users.countDocuments();
     }
     return value;
   }
@@ -45,7 +43,7 @@ class DBClient {
   async nbFiles() {
     let value = 0;
     if (this.isAlive()) {
-      const collection = this.database.collection('files');
+      const collection = this.database.collections.files;
       collection.find().toArray((err, docs) => {
         value = docs.length;
       });
