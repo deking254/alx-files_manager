@@ -11,24 +11,23 @@ class DBClient {
     if (env.DB_PORT && env.DB_HOST && env.DB_DATABASE){ 
       this.url = `mongodb://${env.DB_HOST}:${env.DB_PORT}/${env.DB_DATABASE}`
     }else{
-      this.url = `mongodb://localhost:27017/file_manager`;
+      this.url = `mongodb://localhost:27017`;
     }
-    this.client = new MongoClient(this.url);
+    this.client = new MongoClient(this.url, { useUnifiedTopology: true })
+    this.client.connect((error, client)=>{
+      if (client){
+        this.clientObject = client;
+      }
+    });
     }
   isAlive() {
-    let statu = false;
-    this.client.connect((error, client)=>{
-      if (error){
-        return false
-      } else {
-        statu = true
-      }
-    })
-	  return statu;
-  }
+    if (this.clientObject){
+      return true;
+    }
+    return false
+   }
   async nbUsers (){
-    if (this.isAlive()){
-      
+    if (this.isAlive()){ 
     }
   }
   async nbFiles () {
