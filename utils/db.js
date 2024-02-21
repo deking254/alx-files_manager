@@ -43,7 +43,7 @@ class DBClient {
   async nbFiles() {
     let value = 0;
     if (this.isAlive()) {
-      const files = this.database.collections('files');
+      const files = this.database.collection('files');
       value = await files.countDocuments();
     }
     return value;
