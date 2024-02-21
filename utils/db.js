@@ -1,45 +1,56 @@
-const MongoClient = require('mongodb').MongoClient;
-const env = require('process').env;
+const { MongoClient } = require('mongodb');
+const { env } = require('process');
+
 class DBClient {
   constructor() {
     this.clientObject = null;
     this.database = null;
-    if (env.DB_DATABASE){
+    if (env.DB_DATABASE) {
       this.databaseName = env.DB_DATABASE;
     } else {
       this.databaseName = 'files_manager';
     }
-    if (env.DB_PORT && env.DB_HOST && env.DB_DATABASE){ 
-      this.url = `mongodb://${env.DB_HOST}:${env.DB_PORT}/${env.DB_DATABASE}`
-    }else{
-      this.url = `mongodb://localhost:27017`;
+    if (env.DB_PORT && env.DB_HOST && env.DB_DATABASE) {
+      this.url = `mongodb://${env.DB_HOST}:${env.DB_PORT}/${env.DB_DATABASE}`;
+    } else {
+      this.url = 'mongodb://localhost:27017';
     }
-    this.client = new MongoClient(this.url, { useUnifiedTopology: true })
-    this.client.connect((error, client)=>{
-      if (client){
+    this.client = new MongoClient(this.url, { useUnifiedTopology: true });
+    this.client.connect((error, client) => {
+      if (client) {
         this.clientObject = client;
-	this.database = this.clientObject.db(this.databaseName);
+        this.database = this.clientObject.db(this.databaseName);
       }
     });
-    }
+  }
+
   isAlive() {
-    if (this.clientObject){
+    if (this.clientObject) {
       return true;
     }
-    return false
-   }
-  async nbUsers (){
+    return false;
+  }
+
+  async nbUsers() {
     let value = 0;
-    if (this.isAlive()){
+    if (this.isAlive()) {
       const collection = this.database.collection('users');
-      collection.find({}).toArray((err, docs)=>{
-       value = docs.length; 
-      })
+      collection.find({}).toArray((err, docs) => {
+        value = docs.length;
+      });
     }
     return value;
   }
-  async nbFiles () {
 
+  async nbFiles() {
+    let value = 0;
+    if (this.isAlive()) {
+      const collection = this.database.collection('files');
+      collection.find({}).toArray((err, docs) => {
+        value = docs.length;
+      });
+    }
+    return value;
   }
 }
 const dbClient = new DBClient();
