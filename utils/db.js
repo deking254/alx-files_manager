@@ -3,6 +3,7 @@ const env = require('process').env;
 class DBClient {
   constructor() {
     this.clientObject = null;
+    this.database = null;
     if (env.DB_DATABASE){
       this.databaseName = env.DB_DATABASE;
     } else {
@@ -17,6 +18,7 @@ class DBClient {
     this.client.connect((error, client)=>{
       if (client){
         this.clientObject = client;
+	this.database = this.clientObject.db(this.databaseName);
       }
     });
     }
@@ -27,8 +29,14 @@ class DBClient {
     return false
    }
   async nbUsers (){
-    if (this.isAlive()){ 
+    let value = 0;
+    if (this.isAlive()){
+      const collection = this.database.collection('users');
+      collection.find({}).toArray((err, docs)=>{
+       value = docs.length; 
+      })
     }
+    return value;
   }
   async nbFiles () {
 
