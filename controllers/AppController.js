@@ -11,13 +11,13 @@ async function getStats () {
 getStats();
 router.get('/status', (req, res)=>{
   res.statusCode = 200;
-  let result = JSON.stringify({ "redis": redisClient.isAlive(), "db": mongoClient.isAlive() });
+  let result = { "redis": redisClient.isAlive(), "db": mongoClient.isAlive() };
   res.status(200).send(result);
 })
 
 router.get('/stats', (req, res)=>{
   res.statusCode = 200;
-  let result = JSON.stringify({ "users": userCount, "files": fileCount });
-  res.status.send(result);
+  let result = { "users": userCount, "files": fileCount };
+  res.status(200).send(result);
 })
 module.exports = router;
