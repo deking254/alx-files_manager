@@ -12,12 +12,12 @@ getStats();
 router.get('/status', (req, res)=>{
   res.statusCode = 200;
   let result = JSON.stringify({ "redis": redisClient.isAlive(), "db": mongoClient.isAlive() });
-  res.end(result);
+  res.send(result);
 })
 
 router.get('/stats', (req, res)=>{
   res.statusCode = 200;
   let result = JSON.stringify({ "users": userCount, "files": fileCount });
-  res.end(result);
+  return res.send(result);
 })
 module.exports = router;
