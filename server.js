@@ -1,6 +1,5 @@
 const express = require('express');
 const routes = require('./routes/index')
 const app = express();
-routes.getStatus(app);
-routes.getStats(app);
+app.use('/', routes);
 app.listen({port: 5000});
