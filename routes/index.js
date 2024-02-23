@@ -10,7 +10,15 @@ router.get('/stats', (req, res)=>{
 router.post('/users', (req, res)=>{
 req.on('data', (i)=>{
   let data = JSON.parse(String(i))
-  userCtrl.postNew(req, res, data.email, data.password);
+  if (!data.email){
+    res.status(400).send({"error":"Missing email"});
+  }
+  if (!data.password){
+    res.status(400).send({"error":"Missing password"});
+  }
+  if (data.email && data.password){
+    userCtrl.postNew(req, res, data.email, data.password);
+  }
 })
 })
 module.exports = router;

@@ -13,7 +13,7 @@ class DBClient {
     if (env.DB_PORT && env.DB_HOST && env.DB_DATABASE) {
       this.url = `mongodb://${env.DB_HOST}:${env.DB_PORT}/${env.DB_DATABASE}`;
     } else {
-      this.url = 'mongodb://localhost:27017';
+      this.url = 'mongodb://localhost:27017/files_manager';
     }
     this.client = new MongoClient(this.url, { useUnifiedTopology: true });
     this.client.connect((error, client) => {
