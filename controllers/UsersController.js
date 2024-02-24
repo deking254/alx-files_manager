@@ -1,5 +1,6 @@
 const db = require('../utils/db');
 const sha = require('sha1');
+const cache = require('../utils/redis');
 class UsersController {
   constructor (){
   this.postNew = async (request, response, email, password) =>{
@@ -21,6 +22,25 @@ class UsersController {
       })
     } else {
       response.status(400).send({"error":"Already exist"});
+    }
+  }
+  this.getMe = async (req, res)=>{
+    let token = req.header('X-Token');
+    if (token){
+      let userId = await cache.get(token);
+      if (userId){
+        db.database.collection('users').find({}).toArray((err, result)=>{
+          for (let i = 0; i < result.length; i++){
+            if (result[i]._id.toString() === userId){
+              let id = result[i]._id.toString();
+	      let email = result[i].email;
+	      res.status(200).send({"id": id, "email": email})
+	    }
+	  }
+	})
+      } else {
+        res.status(401).send({"error":"Unauthorized"});
+      }
     }
   }
   }

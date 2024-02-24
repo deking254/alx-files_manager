@@ -35,7 +35,7 @@ class RedisClient {
 
   async del(key) {
     if (this.isAlive()) {
-      this.client.delete(key);
+      this.client.del(key);
     }
   }
 }

@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const appCtrl = require('../controllers/AppController');
 const userCtrl = require('../controllers/UsersController');
+const authCtrl = require('../controllers/AuthController');
 router.get('/status', (req, res)=>{
   appCtrl.getStatus(res);
 })
@@ -20,5 +21,14 @@ req.on('data', (i)=>{
     userCtrl.postNew(req, res, data.email, data.password);
   }
 })
+})
+router.get('/connect', (req, res)=>{
+  authCtrl.getConnect(req, res);
+})
+router.get('/disconnect', (req, res)=>{
+  authCtrl.getDisconnect(req, res);
+})
+router.get('/users/me', (req, res)=>{
+  userCtrl.getMe(req, res);
 })
 module.exports = router;
