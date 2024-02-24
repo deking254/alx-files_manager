@@ -10,15 +10,16 @@ class AuthController{
     let authCode = req.header("Authorization").split(' ')[1];
     try{
       let byteCode = basicAuth.toByteArray(authCode);
-      let emailAndPassword = new TextDecoder().decode(byteCode).split(':');
-	    let j = new TextDecoder().decode(byteCode);
-	    console.log(j)
+      let emailAndPassword = new TextDecoder().decode(byteCode);
+      if (!emailAndPassword.includes(':')){
+         res.status(401).send({"error":"Unauthorized"});
+      }
+      emailAndPassword = emailAndPassword.split(':');
       let email = emailAndPassword[0];
       let hashedPassword = sha(emailAndPassword[1]);
       let user = database.database.collection('users').find({'email': email, 'password': hashedPassword}).toArray((err, result)=>{
         if (!err){
           if (result.length){
-		  console.log('were');
             let userResult = result[0];
             let token = uuid.v4();
             cache.set(token, userResult._id.toString(), 86400)
