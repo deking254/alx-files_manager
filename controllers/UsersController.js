@@ -27,7 +27,7 @@ class UsersController {
   this.getMe = async (req, res)=>{
     let token = req.header('X-Token');
     if (token){
-      let userId = await cache.get(token);
+      let userId = await cache.get('auth_' + token);
       if (userId){
         db.database.collection('users').find({}).toArray((err, result)=>{
 	  let exists = false;

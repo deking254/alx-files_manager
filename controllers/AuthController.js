@@ -6,7 +6,7 @@ const sha = require('sha1');
 const uuid = require('uuid');
 class AuthController{
   constructor(){
-    this.getConnect = (req, res)=>{
+    this.getConnect = (req, res)=>{ 
     let authCode = req.header("Authorization").split(' ')[1];
     try{
       let byteCode = basicAuth.toByteArray(authCode);
@@ -30,11 +30,12 @@ class AuthController{
         }
       })
     } catch(e) {
+      res.status(401).send({"error":"Unauthorized"});
     }
     }
     this.getDisconnect = async (req, res) =>{
       let tokenSupplied = req.header("X-Token");
-      if (!tokenSupplie){
+      if (!tokenSupplied){
         res.status(401).send({"error":"Unauthorized"})
       }
       let userId = await cache.get('auth_' + tokenSupplied);
@@ -42,11 +43,16 @@ class AuthController{
         let usr = database.database.collection('users').find({}).toArray((err, result)=>{
           if (!err){
             if (result.length){
+	      let found = false;
               for (let i = 0; i < result.length; i++){
                 if (result[i]._id.toString() === userId){
+	          found = true;
                   cache.del("auth_" + tokenSupplied);
 		  res.status(204).send()
 	        }
+	      }
+	      if (found === false){
+                res.status(401).send({"error":"Unauthorized"});
 	      }
 	    }else{
               res.status(401).send({"error":"Unauthorized"});
