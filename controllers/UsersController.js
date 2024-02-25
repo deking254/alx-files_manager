@@ -46,6 +46,8 @@ class UsersController {
       } else {
         res.status(401).send({"error":"Unauthorized"});
       }
+    }else{
+      res.status(401).send({"error":"Unauthorized"});
     }
   }
   }
