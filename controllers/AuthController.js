@@ -34,7 +34,7 @@ class AuthController{
     }
     this.getDisconnect = async (req, res) =>{
       let tokenSupplied = req.header("X-Token");
-      let userId = await cache.get(tokenSupplied);
+      let userId = await cache.get('auth_' + tokenSupplied);
       if (userId) {
         let usr = database.database.collection('users').find({}).toArray((err, result)=>{
           if (!err){
