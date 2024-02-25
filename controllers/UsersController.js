@@ -30,12 +30,17 @@ class UsersController {
       let userId = await cache.get(token);
       if (userId){
         db.database.collection('users').find({}).toArray((err, result)=>{
+	  let exists = false;
           for (let i = 0; i < result.length; i++){
             if (result[i]._id.toString() === userId){
+	      exists = true;
               let id = result[i]._id.toString();
 	      let email = result[i].email;
 	      res.status(200).send({"id": id, "email": email})
 	    }
+	  }
+          if (!exists){
+            res.status(401).send({"error":"Unauthorized"});
 	  }
 	})
       } else {
