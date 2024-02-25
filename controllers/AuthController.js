@@ -42,7 +42,7 @@ class AuthController{
               for (let i = 0; i < result.length; i++){
                 if (result[i]._id.toString() === userId){
                   cache.del("auth_" + tokenSupplied);
-		  res.status(201).send()
+		  res.status(204).send()
 	        }
 	      }
 	    }else{
