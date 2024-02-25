@@ -21,6 +21,7 @@ class AuthController{
         if (!err){
           if (result.length){
             let userResult = result[0];
+	    let token = uuid.v4();
             cache.set("auth_" + token, userResult._id.toString(), 86400)
             res.status(200).send({'token': token});
           }else{
@@ -40,7 +41,6 @@ class AuthController{
             if (result.length){
               for (let i = 0; i < result.length; i++){
                 if (result[i]._id.toString() === userId){
-			console.log(result[i])
                   cache.del("auth_" + tokenSupplied);
 		  res.status(201).send()
 	        }
