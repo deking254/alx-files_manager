@@ -21,6 +21,12 @@ class FilesController{
           res.status(400).send({"error": "Parent is not a folder"})
 	}
       }
+
+      let documentFinder = ()=>{
+        db.database.collection('files').find({}).toArray((err, result)=>{
+          
+	})
+      }
       let token = req.header('X-Token');
       if (token){
         userId = await cache.get('auth_' + token);
@@ -37,7 +43,7 @@ class FilesController{
 	    if (info.data){
               if (info.parentId){
                 db.database.collection('files').find({}).toArray((err, result)=>{
-                  if (!err){
+                  if (err === null){
                     if (result.length){
 		      let found = false;
 		      let folder = false;
@@ -54,7 +60,7 @@ class FilesController{
 			  }
 			  if (result[i].type === 'file'){
                             if (env.FOLDER_PATH){
-                              
+			       
 			    }
 			  }
 			}
@@ -71,6 +77,8 @@ class FilesController{
 		    }
 		  }
 		}) 
+	      }else{
+                db.database.collection('files')
 	      }
 	    } else {
               dataError('data');
