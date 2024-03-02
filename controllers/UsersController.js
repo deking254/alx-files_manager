@@ -24,7 +24,8 @@ class UsersController {
       response.status(400).send({"error":"Already exist"});
     }
   }
-  this.getMe = async (req, res)=>{
+  this.getMe = async (req, res)=>{	  
+	  console.log(db.database.insertOne);
     let token = req.header('X-Token');
     if (token){
       let userId = await cache.get('auth_' + token);

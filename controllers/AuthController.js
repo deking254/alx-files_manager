@@ -7,32 +7,39 @@ const uuid = require('uuid');
 class AuthController{
   constructor(){
     this.getConnect = (req, res)=>{ 
-    let authCode = req.header("Authorization").split(' ')[1];
-    try{
-      let byteCode = basicAuth.toByteArray(authCode);
-      let emailAndPassword = new TextDecoder().decode(byteCode);
-      if (!emailAndPassword.includes(':')){
-         res.status(401).send({"error":"Unauthorized"});
-      }
-      emailAndPassword = emailAndPassword.split(':');
-      let email = emailAndPassword[0];
-      let hashedPassword = sha(emailAndPassword[1]);
-      let user = database.database.collection('users').find({'email': email, 'password': hashedPassword}).toArray((err, result)=>{
-        if (!err){
-          if (result.length){
-            let userResult = result[0];
-	    let token = uuid.v4();
-            cache.set("auth_" + token, userResult._id.toString(), 86400)
-            res.status(200).send({'token': token});
-          }else{
-            res.status(401).send({"error":"Unauthorized"});
-	  }
+    if (req.header("Authorization")){
+      let authCode = req.header("Authorization").split(' ')[1];
+      try{
+        let byteCode = basicAuth.toByteArray(authCode);
+        let emailAndPassword = new TextDecoder().decode(byteCode);
+        if (!emailAndPassword.includes(':')){
+           res.status(401).send({"error":"Unauthorized"});
         }
-      })
-    } catch(e) {
+        emailAndPassword = emailAndPassword.split(':');
+        let email = emailAndPassword[0];
+        let hashedPassword = sha(emailAndPassword[1]);
+        let user = database.database.collection('users').find({'email': email, 'password': hashedPassword}).toArray((err, result)=>{
+          if (!err){
+            if (result.length){
+              let userResult = result[0];
+              let token = uuid.v4();
+              cache.set("auth_" + token, userResult._id.toString(), 86400)
+              res.status(200).send({'token': token});
+            }else{
+              res.status(401).send({"error":"Unauthorized"});
+            }
+          }
+        })
+      } catch(e) {
+            console.log(e);
+        res.status(401).send({"error":"Unauthorized"});
+      }
+    } else {
       res.status(401).send({"error":"Unauthorized"});
     }
     }
+
+
     this.getDisconnect = async (req, res) =>{
       let tokenSupplied = req.header("X-Token");
       if (!tokenSupplied){

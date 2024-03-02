@@ -2,6 +2,8 @@ const router = require('express').Router();
 const appCtrl = require('../controllers/AppController');
 const userCtrl = require('../controllers/UsersController');
 const authCtrl = require('../controllers/AuthController');
+const fileCtrl = require('../controllers/FilesController');
+const urlDecoder = require('qs');
 router.get('/status', (req, res)=>{
   appCtrl.getStatus(res);
 })
@@ -10,7 +12,7 @@ router.get('/stats', (req, res)=>{
 })
 router.post('/users', (req, res)=>{
 req.on('data', (i)=>{
-  let data = JSON.parse(String(i))
+  let data = urlDecoder.parse(String(i))
   if (!data.email){
     res.status(400).send({"error":"Missing email"});
   }
@@ -30,5 +32,8 @@ router.get('/disconnect', (req, res)=>{
 })
 router.get('/users/me', (req, res)=>{
   userCtrl.getMe(req, res);
+})
+router.post('/files', (req, res)=>{
+  fileCtrl.postUpload(req, res);
 })
 module.exports = router;
