@@ -1,7 +1,9 @@
 const db = require('../utils/db');
 const file = require('fs');
 const cache = require('../utils/redis');
-const { env } = require('process')
+const { env } = require('process');
+const { v4 } = require('uuid');
+const base = require('base64-js');
 
 class FilesController{
   constructor(){
@@ -31,6 +33,15 @@ class FilesController{
 	return null;
       }
 
+      let checkPath = ()=>{
+        let path = env.FOLDER_PATH;
+	if (path){
+          return true;
+	}
+	return false;
+      }
+
+
       let checkDocType = (doc)=>{
         if (doc){
           if (doc.type === 'file'){
@@ -55,14 +66,95 @@ class FilesController{
 	return null;
       }
 
+
+
+      let checkTypeValidity = (doc)=>{
+        if (type === 'folder' || type === 'image' || type === 'file'){
+          return true;
+	}
+	return false;
+      }
+
+
       let createFolder = (folder)=>{
-        file.mkdir(folder, {recursive: true}, (err)=>{
-          if (err === null){
-            return true;
+	try{
+          file.mkdir(folder, {recursive: true}, (result)=>{
+           return result; 
+	  })
+	}catch(e){
+          return false;
+	}
+      }
+
+
+      let createFile = (path, doc)=>{
+        file.exists(path, (result)=>{
+          if (result){
+	    let fileName = v4.toString();
+	    let data = readData(doc);
+	    if (data){
+	     file.writeFile(fileName, data, (err)=>{
+               return fileName;
+	     })
+	    }
 	  }
 	})
 	return false;
       }
+
+
+
+      let doOperation = (doc)=>{
+        let type = checkDocType(doc);
+	if (type){
+          if (type === 'folder'){
+            res.status(201).send(addDocToDb(doc)[0]);
+	  }
+	  if (type === 'file'){
+            if (checkPath()){
+              let folderCreationStatus = createFolder(env.FOLDER_PATH);
+	      if (folderCreationStatus){
+                createFile(env.FOLDER_PATH);
+		res.status(201).send(addDocToDb(doc)[0]);
+	      }
+	    } else {
+              let defaultFolder = createFolder('tmp/files_manager');
+	      if (defaultFolder){
+                createFile('tmp/files_manager');
+		res.status(201).send(addDocToDb(doc)[0]);
+	      }
+	    }
+	  }
+	  if (type === 'image'){
+            if (checkPath()){
+              let folderCreationStatus = createFolder(env.FOLDER_PATH);
+              if (folderCreationStatus){
+                createFile(env.FOLDER_PATH);
+                res.status(201).send(addDocToDb(doc)[0]);
+              }
+            } else {
+              let defaultFolder = createFolder('tmp/files_manager');
+              if (defaultFolder){
+                createFile('tmp/files_manager');
+                res.status(201).send(addDocToDb(doc)[0]);
+              }
+            } 
+	  }
+	}
+      }
+
+
+      let readData = (doc)=>{
+        let data = doc.data;	 
+	try{
+	  let byteArray = base.toByteArray(data);
+          let decoder = new TextDecoder();
+	  return decoder.decoder(byteArray);
+	}catch(e){
+          return null;
+	}
+      }
+
 
       let token = req.header('X-Token');
       if (token){
@@ -82,7 +174,7 @@ class FilesController{
                   if (type){
                     if (type === 'folder'){
                       info['userId'] = userId;
-		      res.status(201).send(addDocToDb(info));
+		      doOperation(info);
                     }else {
                       parentError('Not folder');
                     }
@@ -92,7 +184,7 @@ class FilesController{
                 }
               }else{
                 info['userId'] = userId;
-		res.status(201).send(addDocToDb(info));
+		doOperation(info);
               }
             } else {
               dataError('data');
