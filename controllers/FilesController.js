@@ -22,77 +22,94 @@ class FilesController{
 	}
       }
 
-      let documentFinder = ()=>{
-        db.database.collection('files').find({}).toArray((err, result)=>{
-          
+      let documentFinder = (doc)=>{
+        db.database.collection('files').find(doc).toArray((err, result)=>{
+          if (result.length){
+            return result[0];
+	  }
 	})
+	return null;
       }
+
+      let checkDocType = (doc)=>{
+        if (doc){
+          if (doc.type === 'file'){
+            return 'file';
+	  }
+          if (doc.type === 'folder'){
+            return 'folder';
+	  }
+          if (doc.type === 'image'){
+            return 'image';
+	  }
+	}
+	return null;
+      }
+
+      let addDocToDb = (doc)=>{
+        db.database.collection('files').insertOne(doc, ((err, result)=>{
+          if (err === null){
+            return result
+	  }
+	}))
+	return null;
+      }
+
+      let createFolder = (folder)=>{
+        file.mkdir(folder, {recursive: true}, (err)=>{
+          if (err === null){
+            return true;
+	  }
+	})
+	return false;
+      }
+
       let token = req.header('X-Token');
       if (token){
         userId = await cache.get('auth_' + token);
 	if (!userId){
           authError();
-	}
-      }else {
+	} else {
+          req.on('data', (result)=>{
+            let info = JSON.parse(result.toString());
+            if (info.name){
+             if (info.type){
+              if (info.data){
+              if (info.parentId){
+                let doc = documentFinder({'parentId': info.parentId});
+                if (doc){
+                  let type = checkDocType(doc);
+                  if (type){
+                    if (type === 'folder'){
+                      info['userId'] = userId;
+		      res.status(201).send(addDocToDb(info));
+                    }else {
+                      parentError('Not folder');
+                    }
+                  }
+                } else{
+                  parentError('Not found');
+                }
+              }else{
+                info['userId'] = userId;
+		res.status(201).send(addDocToDb(info));
+              }
+            } else {
+              dataError('data');
+            }
+          } else{
+            dataError('type');
+          }
+        }else {
+          dataError('name');
+        }
+      })
+	}  
+       }else {
         authError();
       }
-      req.on('data', (result)=>{
-        let info = JSON.parse(result.toString());
-	if (info.name){
-	  if (info.type){
-	    if (info.data){
-              if (info.parentId){
-                db.database.collection('files').find({}).toArray((err, result)=>{
-                  if (err === null){
-                    if (result.length){
-		      let found = false;
-		      let folder = false;
-                      for (let i = 0; i < result.length; i++){
-                        if (result[i]._id.toString() === info.parentId){
-                          found = true;
-			  if (result[i].type === 'folder'){
-                            folder = true;
-			    info['userId'] = userId;
-		            if (info.type === 'folder'){
-		              db.database.collection('files').insertOne(info);
-			      res.status(201).send(info);
-			    }
-			  }
-			  if (result[i].type === 'file'){
-                            if (env.FOLDER_PATH){
-			       
-			    }
-			  }
-			}
-		      }
-		      if (!found){
-                        parentError('Not found');
-		      } else{
-                        if (!folder){
-                          parentError('Not folder')
-			}
-		      }
-		    } else {
-                      parentError('Not found');
-		    }
-		  }
-		}) 
-	      }else{
-                db.database.collection('files')
-	      }
-	    } else {
-              dataError('data');
-	    }
-	  } else{
-            dataError('type');
-	  }
-	}else {
-          dataError('name');
-	}
-      })
     }
   }
-
 }
 const fileCtrlr = new FilesController();
 module.exports = fileCtrlr;
