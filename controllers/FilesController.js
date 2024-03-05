@@ -51,13 +51,13 @@ class FilesController{
               }
             }
           }else{
-            this.dataError('type');
+            this.dataError('type', res);
           }
         }else{
-          this.dataError('type');
+          this.dataError('type', res);
         }
       }else{
-        this.dataError('name');
+        this.dataError('name', res);
       }
     })
   }
