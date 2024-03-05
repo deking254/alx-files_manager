@@ -1,6 +1,8 @@
 const db = require('../utils/db');
 const sha = require('sha1');
 const cache = require('../utils/redis');
+
+
 class UsersController {
   constructor (){
   this.postNew = async (request, response, email, password) =>{

@@ -12,7 +12,7 @@ router.get('/stats', (req, res)=>{
 })
 router.post('/users', (req, res)=>{
 req.on('data', (i)=>{
-  let data = urlDecoder.parse(String(i))
+  let data = JSON.parse(String(i));
   if (!data.email){
     res.status(400).send({"error":"Missing email"});
   }

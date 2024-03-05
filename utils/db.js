@@ -15,14 +15,20 @@ class DBClient {
     } else {
       this.url = 'mongodb://localhost:27017/files_manager';
     }
-    this.client = new MongoClient(this.url, { useUnifiedTopology: true });
-    this.client.connect((error, client) => {
-      if (client) {
-        this.clientObject = client;
+    let client = new MongoClient(this.url, { useUnifiedTopology: true });
+    client.connect(async (error, clint) => {
+      if (clint) {
+	console.log('Connected to the server');
+        this.clientObject = clint;
         this.database = this.clientObject.db(this.databaseName);
       }
-    });
+      if (error){
+        console.log('Error Connecting to the server');
+      }
+      
+    }); 
   }
+
 
   isAlive() {
     if (this.clientObject) {
