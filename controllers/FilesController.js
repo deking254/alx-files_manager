@@ -29,7 +29,6 @@ class FilesController{
 	      if (object.parentId){
 		let parentStatus = await this.parentFinder(object, res);
                 if (parentStatus){
-			console.log('why are we here');
                   this.doOperation(object);
                   this.addDocToDb(object, userId, req, res);
                 }
@@ -42,7 +41,8 @@ class FilesController{
                 this.dataError('data', res);
               }else{
               if (object.parentId){
-                if (this.parentFinder(object, res)){
+		let parentStatus = await this.parentFinder(object, res);
+                if (this.parentStatus){
                   this.doOperation(object);
                   this.addDocToDb(object, userId, req, res);
                 }
