@@ -27,7 +27,9 @@ class FilesController{
           if(this.checkTypeValidity(object)){
             if (object.data){
 	      if (object.parentId){
-                if (this.parentFinder(object, res)){
+		let parentStatus = await this.parentFinder(object, res);
+                if (parentStatus){
+			console.log('why are we here');
                   this.doOperation(object);
                   this.addDocToDb(object, userId, req, res);
                 }
