@@ -43,6 +43,9 @@ class FilesController {
                             if (err) {
 				    console.log('the provided folder exists');
                               data.userId = userId;
+                                if (data.isPublic === undefined){
+                                  data['isPublic'] = false;
+                                }
                               file.writeFile(`${env.FOLDER_PATH}/${v4().toString()}`, decryptedData, (err) => {
 				      console.log('create adn write to the file');
                                 db.database.collection('files').insertOne(data, (err, result) => {
@@ -63,6 +66,9 @@ class FilesController {
 					  console.log('create adn write to the file');
                                     if (err === null) {
                                       data.userId = userId;
+                                if (data.isPublic === undefined){
+                                  data['isPublic'] = false;
+                                }
                                       db.database.collection('files').insertOne(data, (err, result) => {
 					      console.log('inserting to the collection');
                                         if (err === null) {
@@ -88,6 +94,9 @@ class FilesController {
                             if (err) {
                               data.userId = userId;
 			      data.parentId = 0;
+				                                    if (data.isPublic === undefined){
+									                                      data['isPublic'] = false;
+									                                    }
                               file.writeFile(`${'tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
                                 if (err === null) {
                                   db.database.collection('files').insertOne(data, (err, result) => {
@@ -107,6 +116,9 @@ class FilesController {
                                 if (err === null) {
                                   data.userId = userId;
 				  data.parentId = 0;
+                                if (data.isPublic === undefined){
+                                  data['isPublic'] = false;
+                                }
                                   file.writeFile(`${'tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
                                     if (err === null) {
                                       db.database.collection('files').insertOne(data, (err, result) => {
@@ -133,6 +145,9 @@ class FilesController {
 				console.log('folder provided exists')
                           data.userId = userId;
 			  data.parentId = 0;
+                                if (data.isPublic === undefined){
+                                  data['isPublic'] = false;
+                                }
                           file.writeFile(`${env.FOLDER_PATH}/${v4().toString()}`, decryptedData, (err) => {
 				  console.log('writing to file')
                             db.database.collection('files').insertOne(data, (err, result) => {
@@ -154,6 +169,9 @@ class FilesController {
 					console.log('writing was a success')
                                   data.userId = userId;
 				  data.parentId = 0;
+					                                if (data.isPublic === undefined){
+										                                  data['isPublic'] = false;
+										                                }
                                   db.database.collection('files').insertOne(data, (err, result) => {
 					  console.log('inserting to the dbb')
                                     if (err === null) {
@@ -181,6 +199,9 @@ class FilesController {
 				console.log('default folder exists')
                           data.userId = userId;
 				data['parentId'] = 0;
+                                if (data.isPublic === undefined){
+                                  data['isPublic'] = false;
+                                }
                           file.writeFile(`${'tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
 				  console.log('writing to file')
                             if (err === null) {
@@ -206,6 +227,9 @@ class FilesController {
                             if (err === null) {
                               data.userId = userId;
 			      data['parentId'] = 0;
+                                if (data.isPublic === undefined){
+                                  data['isPublic'] = false;
+                                }
                               file.writeFile(`${'tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
 				      console.log('writing file')
                                 if (err === null) {
