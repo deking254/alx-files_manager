@@ -100,14 +100,14 @@ class FilesController {
                               }
                             });
                           } else {
-                            file.exists('tmp/files_manager', (err) => {
+                            file.exists('/tmp/files_manager', (err) => {
                               if (err) {
                                 data.userId = userId;
                                 data.parentId = 0;
                                 if (data.isPublic === undefined) {
                                   data.isPublic = false;
                                 }
-                                file.writeFile(`${'tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
+                                file.writeFile(`${'/tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
                                   if (err === null) {
                                     db.database.collection('files').insertOne(data, (err, result) => {
                                       if (err === null) {
@@ -122,14 +122,14 @@ class FilesController {
                                   }
                                 });
                               } else {
-                                file.mkdir('tmp/files_manager', { recursive: true }, (err) => {
+                                file.mkdir('/tmp/files_manager', { recursive: true }, (err) => {
                                   if (err === null) {
                                     data.userId = userId;
                                     data.parentId = 0;
                                     if (data.isPublic === undefined) {
                                       data.isPublic = false;
                                     }
-                                    file.writeFile(`${'tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
+                                    file.writeFile(`${'/tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
                                       if (err === null) {
                                         db.database.collection('files').insertOne(data, (err, result) => {
                                           if (err === null) {
@@ -205,7 +205,7 @@ class FilesController {
                         }
                       });
                     } else {
-                      file.exists('tmp/files_manager', (err) => {
+                      file.exists('/tmp/files_manager', (err) => {
 			      console.log('folder not provided');
                         if (err) {
                           console.log('default folder exists');
@@ -214,7 +214,7 @@ class FilesController {
                           if (data.isPublic === undefined) {
                             data.isPublic = false;
                           }
-                          file.writeFile(`${'tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
+                          file.writeFile(`${'/tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
 				  console.log('writing to file');
                             if (err === null) {
 				    console.log('inserting to db');
@@ -233,7 +233,7 @@ class FilesController {
                           });
                         } else {
                           console.log('the default folder does not exist');
-                          file.mkdir('tmp/files_manager', { recursive: true }, (err) => {
+                          file.mkdir('/tmp/files_manager', { recursive: true }, (err) => {
 				  console.log('creating the default dir');
 				  console.log(err);
                             if (err === null) {
@@ -242,7 +242,7 @@ class FilesController {
                               if (data.isPublic === undefined) {
                                 data.isPublic = false;
                               }
-                              file.writeFile(`${'tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
+                              file.writeFile(`${'/tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
 				      console.log('writing file');
                                 if (err === null) {
                                   db.database.collection('files').insertOne(data, (err, result) => {
@@ -296,7 +296,7 @@ class FilesController {
 			  })
 			}else{
 			  if (found === 'not folder'){
-                            res.status(400).send({"error": "Parent is not folder"})
+                            res.status(400).send({"error": "Parent is not a folder"})
 			  }else{
 			    res.status(400).send({"error": "Parent not found"});
 			  }
