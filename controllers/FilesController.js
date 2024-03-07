@@ -33,9 +33,10 @@ class FilesController {
                     if (data.parentId) {
 			    console.log('parentid exists');
                       const parentStatus = await db.database.collection('files').find({ parentId: data.parentId });
-                      if (parentStatus) {
+			    console.log(parentStatus);
+                      if (parentStatus.length > 0) {
 			      console.log('paretn exissts in db');
-                        if (parent.ops[0].type !== 'folder') {
+                        if (parentStatus.ops[0].type !== 'folder') {
                           res.status(400).send({ error: 'Parent not folder' });
                         } else if (env.FOLDER_PATH) {
                           console.log('folder path provided');
