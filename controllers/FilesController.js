@@ -268,18 +268,22 @@ class FilesController {
                  if (data.parentId) {
                             console.log('parentid exists');
                       db.database.collection('files').find({}).toArray((err, list) => {
-                        let found = false;
+                        let found = null;
                         let parentFile = null;
                         if (list.length > 0) {
                           for (let i = 0; i < list.length; i++) {
                             const id = list[i]._id.toString();
                             if (data.parentId === id) {
                                           parentFile = list[i];
-                              found = true;
+			      if (list[i].type === 'folder'){
+                              found = 'folder';
+			      }else{
+				found = 'not folder';
+			      }
                             }
                           }
                         }
-			if (found){
+			if (found === 'folder'){
 			  console.log('parent has been found');
 			  data.userId = userId;
 			  if (data.isPublic === undefined){
@@ -291,7 +295,11 @@ class FilesController {
 			    }
 			  })
 			}else{
-			  res.status(400).send({"error": "Parent not found"});
+			  if (found === 'not folder'){
+                            res.status(400).send({"error": "Parent is not folder"})
+			  }else{
+			    res.status(400).send({"error": "Parent not found"});
+			  }
 			}
 			})
 
