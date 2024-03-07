@@ -32,7 +32,7 @@ class FilesController {
 		    const decryptedData = new TextDecoder().decode(base.toByteArray(data.data));
                     if (data.parentId) {
 			    console.log('parentid exists');
-                      const parentStatus = await db.database.collection('files').find({ parentId: data.parentId });
+                      const parentStatus = await db.database.collection('files').find({ "_id": data.parentId });
 			    console.log(parentStatus);
                       if (parentStatus.length > 0) {
 			      console.log('paretn exissts in db');
