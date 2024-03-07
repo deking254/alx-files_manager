@@ -32,23 +32,32 @@ class FilesController {
 		    const decryptedData = new TextDecoder().decode(base.toByteArray(data.data));
                     if (data.parentId) {
 			    console.log('parentid exists');
-                      const parentStatus = await db.database.collection('files').find({ "_id": data.parentId });
-			    console.log(parentStatus);
-                      if (parentStatus.length > 0) {
-			      console.log('paretn exissts in db');
-                        if (parentStatus.ops[0].type !== 'folder') {
+                      db.database.collection('files').find({}).toArray((err, list)=>{
+			let found = false;
+			let parentFile = null;
+                        if (list.length > 0) {
+                                for (let i = 0; i < list.length; i++){
+                                  let id = list[i]._id.toString();
+                                  if (data.parentId === id){
+					  parentFile = list[i];
+					found = true;
+                                  }
+                              }
+			}
+			if (found){
+                        if (parentFile.type !== 'folder') {
                           res.status(400).send({ error: 'Parent not folder' });
                         } else if (env.FOLDER_PATH) {
                           console.log('folder path provided');
                           const folder = file.exists(env.FOLDER_PATH, (err) => {
                             if (err) {
-				    console.log('the provided folder exists');
+                                    console.log('the provided folder exists');
                               data.userId = userId;
                                 if (data.isPublic === undefined){
                                   data['isPublic'] = false;
                                 }
                               file.writeFile(`${env.FOLDER_PATH}/${v4().toString()}`, decryptedData, (err) => {
-				      console.log('create adn write to the file');
+                                      console.log('create adn write to the file');
                                 db.database.collection('files').insertOne(data, (err, result) => {
                                   if (err === null) {
                                     console.log('inerted the doc successfully');
@@ -60,18 +69,18 @@ class FilesController {
                               });
                             } else {
                               file.mkdir(env.FOLDER_PATH, { recurssive: true }, (err) => {
-				      console.log('provided folder does not exist');
+                                      console.log('provided folder does not exist');
                                 if (err === null) {
                                   console.log('provided folder created successfull');
                                   file.writeFile(`${env.FOLDER_PATH}/${v4().toString()}`, decryptedData, (err) => {
-					  console.log('create adn write to the file');
+                                          console.log('create adn write to the file');
                                     if (err === null) {
                                       data.userId = userId;
                                 if (data.isPublic === undefined){
                                   data['isPublic'] = false;
                                 }
                                       db.database.collection('files').insertOne(data, (err, result) => {
-					      console.log('inserting to the collection');
+                                              console.log('inserting to the collection');
                                         if (err === null) {
                                           res.status(201).send(result.ops[0]);
                                         } else {
@@ -94,10 +103,10 @@ class FilesController {
                           file.exists('tmp/files_manager', (err) => {
                             if (err) {
                               data.userId = userId;
-			      data.parentId = 0;
-				                                    if (data.isPublic === undefined){
-									                                      data['isPublic'] = false;
-									                                    }
+                              data.parentId = 0;
+                                                                    if (data.isPublic === undefined){
+                                                                                                              data['isPublic'] = false;
+                                                                                                            }
                               file.writeFile(`${'tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
                                 if (err === null) {
                                   db.database.collection('files').insertOne(data, (err, result) => {
@@ -116,7 +125,7 @@ class FilesController {
                               file.mkdir('tmp/files_manager', { recursive: true }, (err) => {
                                 if (err === null) {
                                   data.userId = userId;
-				  data.parentId = 0;
+                                  data.parentId = 0;
                                 if (data.isPublic === undefined){
                                   data['isPublic'] = false;
                                 }
@@ -139,6 +148,8 @@ class FilesController {
                       } else {
                         res.status(400).send({ error: 'Parent not found' });
                       }
+		      });
+		
                     } else if (env.FOLDER_PATH) {
 			    console.log('parentId not provided')
                       const folder = file.exists(env.FOLDER_PATH, (err) => {
@@ -249,7 +260,7 @@ class FilesController {
                           });
                         }
                       });
-                    }
+   			}
                   } else {
                     res.status(400).send({ error: 'Missing data' });
                   }
