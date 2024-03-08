@@ -11,343 +11,341 @@ class FilesController {
   }
 
   async postUpload(req, res) {
-    const token = req.header('X-Token');
+  	    const token = req.header('X-Token');
     if (token) {
 	    console.log('token exissts');
-      const userId = await cache.get(`auth_${token}`);
-      if (userId) {
-        req.on('data', async (dat) => {
-          console.log('data received');
-          const data = JSON.parse(dat);
-          if (data.name) {
-		  console.log('name exists');
-            if (data.type) {
-		    console.log('type exists');
-              if (data.type === 'file' || data.type === 'folder' || data.type === 'image') {
-		      console.log('type is valid');
-                if (data.type === 'file') {
-                  console.log('type is file');
-                  if (data.data) {
-                    console.log('data exists');
-		    const decryptedData = new TextDecoder().decode(base.toByteArray(data.data));
-                    if (data.parentId) {
-			    console.log('parentid exists');
-                      db.database.collection('files').find({}).toArray((err, list) => {
-                        let found = false;
-                        let parentFile = null;
-                        if (list.length > 0) {
-                          for (let i = 0; i < list.length; i++) {
-                            const id = list[i]._id.toString();
-                            if (data.parentId === id) {
-					  parentFile = list[i];
-                              found = true;
-                            }
-                          }
-                        }
-                        if (found) {
-                          if (parentFile.type !== 'folder') {
-                            res.status(400).send({ error: 'Parent is not a folder' });
-                          } else if (env.FOLDER_PATH) {
-                            console.log('folder path provided');
-                            const folder = file.exists(env.FOLDER_PATH, (err) => {
-                              if (err) {
-                                console.log('the provided folder exists');
-                                data.userId = userId;
-                                if (data.isPublic === undefined) {
-                                  data.isPublic = false;
-                                }
-                                file.writeFile(`${env.FOLDER_PATH}/${v4().toString()}`, decryptedData, (err) => {
-                                  console.log('create adn write to the file');
-                                  db.database.collection('files').insertOne(data, (err, result) => {
-                                    if (err === null) {
-                                      console.log('inerted the doc successfully');
-                                      res.status(201).send(result.ops[0]);
-                                    } else {
-                                      res.status(201).send({ error: 'Error adding to the database' });
+      const userIdInCache = await cache.get(`auth_${token}`);
+	    console.log(userIdInCache);
+      db.database.collection('users').find({}).toArray((err, result) => {
+      	let userId;
+      	let foundUser = false;
+      	if (result.length > 0) {
+      		for (let i = 0; i < result.length; i++) {
+      			if (result[i]._id.toString() === userIdInCache) {
+      				userId = result[i]._id;
+      				foundUser = true;
+      			}
+      		}
+      		if (foundUser) {
+      			req.on('data', (dat) => {
+      				const data = JSON.parse(dat);
+      				if (data.name) {
+      					if (data.parentId) {
+      						db.database.collection('files').find({}).toArray((err, result) => {
+      							let parentFileId = null;
+      							let foundParent = false;
+      							let parentAFolder = false;
+      							for (let i = 0; i < result.length; i++) {
+      								if (result[i]._id.toString() === data.parentId) {
+      									foundParent = true;
+      									if (result[i].type === folder) {
+      									  parentFileId = result[i]._id;
+      									  parentAFolder = true;
+      									}
+      								}
+      							}
+      							if (foundParent) {
+      								if (parentAFolder) {
+      									if (data.type === 'file' || data.type === 'folder' || data.type === 'image') {
+      										const path = env.FOLDER_PATH ? env.FOLDER_PATH : '/tmp/files_manager';
+      										if (data.type === 'file') {
+      											if (data.data) {
+      												const decryptedData = new TextDecoder().decode(base.toByteArray(data.data));
+      												file.exists(path, (err) => {
+      													if (err) {
+      														console.log('the provided folder exists');
+      														data.userId = userId;
+      														data.parentId = parentFileId;
+      														if (data.isPublic === undefined) {
+      															data.isPublic = false;
+      														}
+      														file.writeFile(`${path}/${v4().toString()}`, decryptedData, (err) => {
+      															console.log('create adn write to the file');
+      															db.database.collection('files').insertOne(data, (err, result) => {
+      																if (err === null) {
+      																	console.log('inerted the doc successfully');
+      																	const object = {};
+      																	object.id = result.ops[0]._id;
+      																	object.userId = result.ops[0].userId.toString();
+      																	object.type = result.ops[0].type;
+																	object.name = result.ops[0].name;
+      																	object.isPublic = result.ops[0].isPublic;
+      																	object.parentId = result.ops[0].parentId.toString();
+      																	res.status(201).send(object);
+      																} else {
+      																	res.status(201).send({ error: 'Error adding to the database' });
+      																}
+      															});
+      														});
+      													} else {
+      														file.mkdir(path, { recurssive: true }, (err) => {
+      															console.log('provided folder does not exist');
+      															if (err === null) {
+      																console.log('provided folder created successfull');
+      																file.writeFile(`${path}/${v4().toString()}`, decryptedData, (err) => {
+      																	console.log('create adn write to the file');
+      																	if (err === null) {
+      																		data.userId = userId;
+      																		data.parentId = parentFile._id;
+      																		if (data.isPublic === undefined) {
+      																			data.isPublic = false;
+      																		}
+      																		db.database.collection('files').insertOne(data, (err, result) => {
+      																			console.log('inserting to the collection');
+      																			if (err === null) {
+      																				const object = {};
+      																				object.id = result.ops[0]._id;
+      																				object.userId = result.ops[0].userId.toString();
+      																				object.type = result.ops[0].type;
+      																				object.isPublic = result.ops[0].isPublic;
+      																				object.parentId = result.ops[0].parentId.toString();
+																				object.name = result.ops[0].name;
+      																				res.status(201).send(object);
+      																			} else {
+      																				res.status(201).send({ error: 'Error adding to db' });
+      																			}
+      																		});
+      																	}
+      																});
+      															} else {
+                                      // code for when the folder could not be created
+                                      res.status(400).send({ error: 'file/folder error' });
                                     }
                                   });
-                                });
-                              } else {
-                                file.mkdir(env.FOLDER_PATH, { recurssive: true }, (err) => {
-                                  console.log('provided folder does not exist');
-                                  if (err === null) {
-                                    console.log('provided folder created successfull');
-                                    file.writeFile(`${env.FOLDER_PATH}/${v4().toString()}`, decryptedData, (err) => {
-                                      console.log('create adn write to the file');
-                                      if (err === null) {
-                                        data.userId = userId;
-                                        if (data.isPublic === undefined) {
-                                          data.isPublic = false;
-                                        }
-                                        db.database.collection('files').insertOne(data, (err, result) => {
-                                          console.log('inserting to the collection');
-                                          if (err === null) {
-                                            res.status(201).send(result.ops[0]);
-                                          } else {
-                                            res.status(201).send({ error: 'Error adding to db' });
-                                          }
-                                        });
-                                      } else {
-                                      // code for when the file could not be created
-                                        res.status(400).send({ error: 'file/folder error' });
-                                      }
-                                    });
-                                  } else {
+      													}
+      												});
+      											} else {
+      												// data missing
+												res.status(400).send({ error: 'Missing data' });
+      											}
+      										}
+      										if (data.type === 'folder') {
+      											file.exists(`${path}/${data.name}`, (err) => {
+      												if (err) {
+      													console.log('the provided folder exists');
+      													data.userId = userId;
+      													data.parentId = parentFile._id;
+      													if (data.isPublic === undefined) {
+      														data.isPublic = false;
+      													}
+      													db.database.collection('files').insertOne(data, (err, result) => {
+      														if (err === null) {
+      															const object = {};
+      															object.id = result.ops[0]._id;
+      															object.userId = result.ops[0].userId.toString();
+															object.name = result.ops[0].name;
+      															object.type = result.ops[0].type;
+      															object.isPublic = result.ops[0].isPublic;
+      															object.parentId = result.ops[0].parentId.toString();
+      															res.status(201).send(object);
+      														} else {
+      															// insertion error
+      														}
+      													});
+      												} else {
+      													file.mkdir(path, { recurssive: true }, (err) => {
+      														console.log('provided folder does not exist');
+      														if (err === null) {
+      															console.log('provided folder created successfull');
+      															data.userId = userId;
+      															data.parentId = parentFile._id;
+      															if (data.isPublic === undefined) {
+      																data.isPublic = false;
+      															}
+      															db.database.collection('files').insertOne(data, (err, result) => {
+      																if (err === null) {
+      																	const object = {};
+      																	object.id = result.ops[0]._id;
+      																	object.userId = result.ops[0].userId.toString();
+      																	object.type = result.ops[0].type;
+																	object.name = result.ops[0].name;
+      																	object.isPublic = result.ops[0].isPublic;
+      																	object.parentId = result.ops[0].parentId.toString();
+      																	res.status(201).send(object);
+      																} else {
+      															// insertion error
+      														}
+      													});
+      														} else {
                                   // code for when the folder could not be created
                                     res.status(400).send({ error: 'file/folder error' });
                                   }
                                 });
-                              }
-                            });
-                          } else {
-                            file.exists('/tmp/files_manager', (err) => {
-                              if (err) {
-                                data.userId = userId;
-                                data.parentId = 0;
-                                if (data.isPublic === undefined) {
-                                  data.isPublic = false;
-                                }
-                                file.writeFile(`${'/tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
-                                  if (err === null) {
-                                    db.database.collection('files').insertOne(data, (err, result) => {
-                                      if (err === null) {
-                                        res.status(201).send(result.ops[0]);
-                                      } else {
-                                        res.status(201).send({ error: 'Error adding to db' });
-                                      }
-                                    });
-                                  } else {
-                                  // code for when the file could not be created
-                                    res.status(400).send({ error: 'file/folder error' });
-                                  }
-                                });
-                              } else {
-                                file.mkdir('/tmp/files_manager', { recursive: true }, (err) => {
-                                  if (err === null) {
-                                    data.userId = userId;
-                                    data.parentId = 0;
-                                    if (data.isPublic === undefined) {
-                                      data.isPublic = false;
-                                    }
-                                    file.writeFile(`${'/tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
-                                      if (err === null) {
-                                        db.database.collection('files').insertOne(data, (err, result) => {
-                                          if (err === null) {
-                                            res.status(201).send(result.ops[0]);
-                                          } else {
-                                            res.status(201).send({ error: 'Error adding to db' });
-                                          }
-                                        });
-                                      }
-                                    });
-                                  }
-                                });
-                              }
-                            });
-                          }
-                        } else {
-                          res.status(400).send({ error: 'Parent not found' });
-                        }
-		      });
-			    //This is the beginning of when the data does not contain the parentId
-                    } else if (env.FOLDER_PATH) {
-			    console.log('parentId not provided');
-                      const folder = file.exists(env.FOLDER_PATH, (err) => {
-                        if (err) {
-                          console.log('folder provided exists');
-                          data.userId = userId;
-			  data.parentId = 0;
-                          if (data.isPublic === undefined) {
-                            data.isPublic = false;
-                          }
-                          file.writeFile(`${env.FOLDER_PATH}/${v4().toString()}`, decryptedData, (err) => {
-				  console.log('writing to file');
-                            db.database.collection('files').insertOne(data, (err, result) => {
-				    console.log('adding to the collection');
-                              if (err === null) {
-                                res.status(201).send(result.ops[0]);
-                              } else {
-                                res.status(201).send({ error: 'Error adding to the database' });
-                              }
-                            });
-                          });
-                        } else {
-                          file.mkdir(env.FOLDER_PATH, { recursive: true }, (err) => {
-				  console.log('the provided folder exists');
-                            if (err === null) {
-				    console.log('writin to file');
-                              file.writeFile(`${env.FOLDER_PATH}/${v4().toString()}`, decryptedData, (err) => {
-                                if (err === null) {
-                                  console.log('writing was a success');
-                                  data.userId = userId;
-				  data.parentId = 0;
-					                                if (data.isPublic === undefined) {
-										                                  data.isPublic = false;
-										                                }
-                                  db.database.collection('files').insertOne(data, (err, result) => {
-					  console.log('inserting to the dbb');
-                                    if (err === null) {
-                                      res.status(201).send(result.ops[0]);
-                                    } else {
-                                      res.status(201).send({ error: 'Error adding to db' });
-                                    }
-                                  });
-                                } else {
-                                  // code for when the file could not be created
-                                  res.status(400).send({ error: 'file/folder error' });
-                                }
-                              });
-                            } else {
-                              // code for when the folder could not be created
-                              res.status(400).send({ error: 'file/folder error' });
-                            }
-                          });
-                        }
-                      });
-                    } else {
-                      file.exists('/tmp/files_manager', (err) => {
-			      console.log('folder not provided');
-                        if (err) {
-                          console.log('default folder exists');
-                          data.userId = userId;
-                          data.parentId = 0;
-                          if (data.isPublic === undefined) {
-                            data.isPublic = false;
-                          }
-                          file.writeFile(`${'/tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
-				  console.log('writing to file');
-                            if (err === null) {
-				    console.log('inserting to db');
-                              db.database.collection('files').insertOne(data, (err, result) => {
-                                if (err === null) {
+      												}
+      											});
+      										}
+      										if (data.type === 'image') {
+      											// handle for when type is image and the parentId was set and is valid
+      										}
+      									} else {
+      										// type not valid
+										res.status(400).send({ error: 'Missing type' });
+      									}
+      								} else {
+      									// parentNot a folder
+									res.status(400).send({ error: 'Parent is not a folder' });
+      								}
+      							} else {
+      								// parent not found
+								res.status(400).send({ error: 'Parent not found' });
+      							}
+      						});
+      					} else {
+      						// parentId was not set. implement for the different types  and make parentId to be 0
+      						if (data.type === 'file' || data.type === 'folder' || data.type === 'image') {
+      							const path = env.FOLDER_PATH ? env.FOLDER_PATH : '/tmp/files_manager';
+      							if (data.type === 'file') {
+      								if (data.data) {
+      									const decryptedData = new TextDecoder().decode(base.toByteArray(data.data));
+      									file.exists(path, (err) => {
+      										if (err) {
+      											console.log('the provided folder exists');
+      											data.userId = userId;
+      											if (data.isPublic === undefined) {
+      												data.isPublic = false;
+      											}
+      											file.writeFile(`${path}/${v4().toString()}`, decryptedData, (err) => {
+      												console.log('create adn write to the file');
+      												db.database.collection('files').insertOne(data, (err, result) => {
+      													if (err === null) {
+      														console.log('inerted the doc successfully');
+      														const object = {};
+      														object.id = result.ops[0]._id;
                                   console.log(result.ops[0]);
-                                  res.status(201).send(result.ops[0]);
-                                } else {
-                                  res.status(201).send({ error: 'Error adding to db' });
-                                }
-                              });
-                            } else {
-                              // code for when the file could not be created
+      														object.userId = result.ops[0].userId.toString();
+														object.name = result.ops[0].name;
+      														object.type = result.ops[0].type;
+      														object.isPublic = result.ops[0].isPublic;
+      														object.parentId = 0;
+      														res.status(201).send(object);
+      													} else {
+      														res.status(201).send({ error: 'Error adding to the database' });
+      													}
+      												});
+      											});
+      										} else {
+      											file.mkdir(path, { recurssive: true }, (err) => {
+      												console.log('provided folder does not exist');
+      												if (err === null) {
+      													console.log('provided folder created successfull');
+      													file.writeFile(`${path}/${v4().toString()}`, decryptedData, (err) => {
+      														console.log('create adn write to the file');
+      														if (err === null) {
+      															data.userId = userId;
+      															if (data.isPublic === undefined) {
+      																data.isPublic = false;
+      															}
+      															db.database.collection('files').insertOne(data, (err, result) => {
+      																console.log('inserting to the collection');
+      																if (err === null) {
+      																	const object = {};
+      																	object.id = result.ops[0]._id;
+                                        console.log(result.ops[0]);
+      																	object.userId = result.ops[0].userId.toString();
+      																	object.type = result.ops[0].type;
+																	object.name = result.ops[0].name;
+      																	object.isPublic = result.ops[0].isPublic;
+      																	object.parentId = 0;
+      																	res.status(201).send(object);
+      																} else {
+      																	res.status(201).send({ error: 'Error adding to db' });
+      																}
+      															});
+      														}
+      													});
+      												} else {
+                                // code for when the folder could not be created
+                                res.status(400).send({ error: 'file/folder error' });
+                              }
+                            });
+      										}
+      									});
+      								} else {
+      												// data missing
+									res.status(400).send({error: "Missing data"});
+      											}
+      										}
+      										if (data.type === 'folder') {
+      											file.exists(`${path}/${data.name}`, (err) => {
+      												if (err) {
+      													console.log('the provided folder exists');
+      													data.userId = userId;
+      													data.parentId = 0;
+      													if (data.isPublic === undefined) {
+      														data.isPublic = false;
+      													}
+      													db.database.collection('files').insertOne(data, (err, result) => {
+      														if (err === null) {
+      															const object = {};
+      															object.id = result.ops[0]._id;
+      															object.userId = result.ops[0].userId.toString();
+															object.name = result.ops[0].name;
+      															object.type = result.ops[0].type;
+      															object.isPublic = result.ops[0].isPublic;
+      															object.parentId = result.ops[0].parentId.toString();
+      															res.status(201).send(object);
+      														} else {
+      															// insertion error
+      														}
+      													});
+      												} else {
+      													file.mkdir(`${path}/${data.name}`, { recurssive: true }, (err) => {
+      														console.log('provided folder does not exist');
+      														if (err === null) {
+      															console.log('provided folder created successfull');
+      															data.userId = userId;
+      															data.parentId = 0;
+      															if (data.isPublic === undefined) {
+      																data.isPublic = false;
+      															}
+      															db.database.collection('files').insertOne(data, (err, result) => {
+      																if (err === null) {
+      																	const object = {};
+      																	object.id = result.ops[0]._id;
+      																	object.userId = result.ops[0].userId.toString();
+																	object.name = result.ops[0].name;
+      																	object.type = result.ops[0].type;
+      																	object.isPublic = result.ops[0].isPublic;
+      																	object.parentId = result.ops[0].parentId.toString();
+      																	res.status(201).send(object);
+      																} else {
+      															// insertion error
+      														}
+      													});
+      														} else {
+                              // code for when the folder could not be created
+				console.log(err);
                               res.status(400).send({ error: 'file/folder error' });
                             }
                           });
-                        } else {
-                          console.log('the default folder does not exist');
-                          file.mkdir('/tmp/files_manager', { recursive: true }, (err) => {
-				  console.log('creating the default dir');
-				  console.log(err);
-                            if (err === null) {
-                              data.userId = userId;
-			      data.parentId = 0;
-                              if (data.isPublic === undefined) {
-                                data.isPublic = false;
-                              }
-                              file.writeFile(`${'/tmp/files_manager' + '/'}${v4().toString()}`, decryptedData, (err) => {
-				      console.log('writing file');
-                                if (err === null) {
-                                  db.database.collection('files').insertOne(data, (err, result) => {
-					  console.log('inserting to db');
-                                    if (err === null) {
-					    console.log(result.ops[0]);
-                                      res.status(201).send(result.ops[0]);
-                                    } else {
-                                      res.status(201).send({ error: 'Error adding to db' });
-                                    }
-                                  });
-                                }
-                              });
-                            }
-                          });
-                        }
-                      });
-   			}
-                  } else {
-                    res.status(400).send({ error: 'Missing data' });
-                  }
-                }else if (data.type === 'folder'){
-                 if (data.parentId) {
-                            console.log('parentid exists');
-		      const decryptedData = new TextDecoder().decode(base.toByteArray(data.data));
-                      db.database.collection('files').find({}).toArray((err, list) => {
-                        let found = null;
-                        let parentFile = null;
-                        if (list.length > 0) {
-                          for (let i = 0; i < list.length; i++) {
-                            const id = list[i]._id.toString();
-                            if (data.parentId === id) {
-                                          parentFile = list[i];
-			      if (list[i].type === 'folder'){
-                              found = 'folder';
-
-
-
-				if (env.FOLDER_PATH){
-				  file.mkdir(env.FOLDER_PATH, {recursive: true}, (err)=>{
-                                    
-				  })}
-				}else{
-                                  file.mkdir('/tmp/files_manager', {recursive: true}, (err)=>{
-
-				  })
-				}
-
-
-
-
-			      }else{
-				found = 'not folder';
-			      }
-                            }
-                          }
-                        }
-			if (found === 'folder'){
-			  console.log('parent has been found');
-			  data.userId = userId;
-			  if (data.isPublic === undefined){
-                            data.isPublic = false;
-			  }
-                          db.database.collection('file').insertOne(data, (err, result)=>{
-                            if (err === null){
-                              res.status(201).send(result.ops[0]);
-			    }
-			  })
-			}else{
-			  if (found === 'not folder'){
-                            res.status(400).send({"error": "Parent is not a folder"})
-			  }else{
-			    res.status(400).send({"error": "Parent not found"});
-			  }
-			}
-			})
-
-		 }else{
-		   console.log('parentid was not added to the data')
-			 data.userId = userId;
-			 data.parentId = 0;
-			 if (data.isPublic === undefined){
-			  data.isPublic = false;
-			 }
-			 db.database.collection('file').insertOne(data, (err, result)=>{
-			  if (err === null){
-		            
-                            res.status(201).send(result.ops[0]);
-			  }
-			 })
-		}
-		}
-              } else {
-                res.status(400).send({ error: 'Missing type' });
-              }
-            } else {
-              res.status(400).send({ error: 'Missing type' });
-            }
-          } else {
-            res.status(400).send({ error: 'Missing name' });
-          }
-        });
-      } else {
-        res.status(401).send({ error: 'Unauthorized' });
-      }
+      												}
+      											});
+      										}
+      										if (data.type === 'image') {
+      											// handle when the type is image and the parentId was not set
+      										}
+      						} else {
+      							// type is not valid
+							res.status(400).send({ error: 'Missing type' });
+      						}
+      					}
+      				} else {
+      					// name doesn not exists
+					res.status(400).send({ error: 'Missing name' });
+      				}
+      			});
+      		} else {
+      			// when the login user could not be found in the db
+			res.status(401).send({ error: 'Unauthorized' });
+      		}
+      	} else {
+      		// no users
+		res.status(401).send({ error: 'Unauthorized' });
+      	}
+      });
+    } else {
+    	// unauthorized
+	    res.status(401).send({ error: 'Unauthorized' });
     }
   }
 }
