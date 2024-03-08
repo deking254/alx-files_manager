@@ -267,6 +267,7 @@ class FilesController {
                 }else if (data.type === 'folder'){
                  if (data.parentId) {
                             console.log('parentid exists');
+		      const decryptedData = new TextDecoder().decode(base.toByteArray(data.data));
                       db.database.collection('files').find({}).toArray((err, list) => {
                         let found = null;
                         let parentFile = null;
@@ -277,6 +278,22 @@ class FilesController {
                                           parentFile = list[i];
 			      if (list[i].type === 'folder'){
                               found = 'folder';
+
+
+
+				if (env.FOLDER_PATH){
+				  file.mkdir(env.FOLDER_PATH, {recursive: true}, (err)=>{
+                                    
+				  })}
+				}else{
+                                  file.mkdir('/tmp/files_manager', {recursive: true}, (err)=>{
+
+				  })
+				}
+
+
+
+
 			      }else{
 				found = 'not folder';
 			      }
@@ -312,6 +329,7 @@ class FilesController {
 			 }
 			 db.database.collection('file').insertOne(data, (err, result)=>{
 			  if (err === null){
+		            
                             res.status(201).send(result.ops[0]);
 			  }
 			 })
