@@ -38,7 +38,7 @@ class FilesController {
       							for (let i = 0; i < result.length; i++) {
       								if (result[i]._id.toString() === data.parentId) {
       									foundParent = true;
-      									if (result[i].type === folder) {
+      									if (result[i].type === 'folder') {
       									  parentFileId = result[i]._id;
       									  parentAFolder = true;
       									}
