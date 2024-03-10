@@ -124,7 +124,7 @@ class FilesController {
       												if (err) {
       													console.log('the provided folder exists');
       													data.userId = userId;
-      													data.parentId = parentFile._id;
+      													data.parentId = parentFileId;
       													if (data.isPublic === undefined) {
       														data.isPublic = false;
       													}
@@ -148,7 +148,7 @@ class FilesController {
       														if (err === null) {
       															console.log('provided folder created successfull');
       															data.userId = userId;
-      															data.parentId = parentFile._id;
+      															data.parentId = parentFileId;
       															if (data.isPublic === undefined) {
       																data.isPublic = false;
       															}
