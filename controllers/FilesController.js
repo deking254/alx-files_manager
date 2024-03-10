@@ -70,7 +70,7 @@ class FilesController {
       																	object.type = result.ops[0].type;
 																	object.name = result.ops[0].name;
       																	object.isPublic = result.ops[0].isPublic;
-      																	object.parentId = result.ops[0].parentId.toString();
+      																	object.parentId = result.ops[0].parentId;
       																	res.status(201).send(object);
       																} else {
       																	res.status(201).send({ error: 'Error adding to the database' });
@@ -98,7 +98,7 @@ class FilesController {
       																				object.userId = result.ops[0].userId.toString();
       																				object.type = result.ops[0].type;
       																				object.isPublic = result.ops[0].isPublic;
-      																				object.parentId = result.ops[0].parentId.toString();
+      																				object.parentId = result.ops[0].parentId;
 																				object.name = result.ops[0].name;
       																				res.status(201).send(object);
       																			} else {
@@ -120,7 +120,7 @@ class FilesController {
       											}
       										}
       										if (data.type === 'folder') {
-      											file.exists(`${path}/${data.name}`, (err) => {
+      											file.exists(`/${path}/${data.name}/`, (err) => {
       												if (err) {
       													console.log('the provided folder exists');
       													data.userId = userId;
@@ -136,14 +136,14 @@ class FilesController {
 															object.name = result.ops[0].name;
       															object.type = result.ops[0].type;
       															object.isPublic = result.ops[0].isPublic;
-      															object.parentId = result.ops[0].parentId.toString();
+      															object.parentId = result.ops[0].parentId;
       															res.status(201).send(object);
       														} else {
       															// insertion error
       														}
       													});
       												} else {
-      													file.mkdir(path, { recurssive: true }, (err) => {
+      													file.mkdir(`${path}/${data.name}`, { recursive: true }, (err) => {
       														console.log('provided folder does not exist');
       														if (err === null) {
       															console.log('provided folder created successfull');
@@ -160,7 +160,7 @@ class FilesController {
       																	object.type = result.ops[0].type;
 																	object.name = result.ops[0].name;
       																	object.isPublic = result.ops[0].isPublic;
-      																	object.parentId = result.ops[0].parentId.toString();
+      																	object.parentId = result.ops[0].parentId;
       																	res.status(201).send(object);
       																} else {
       															// insertion error
@@ -224,8 +224,9 @@ class FilesController {
       												});
       											});
       										} else {
-      											file.mkdir(path, { recurssive: true }, (err) => {
+      											file.mkdir(path, { recursive: true }, (err) => {
       												console.log('provided folder does not exist');
+												
       												if (err === null) {
       													console.log('provided folder created successfull');
       													file.writeFile(`${path}/${v4().toString()}`, decryptedData, (err) => {
@@ -282,14 +283,14 @@ class FilesController {
 															object.name = result.ops[0].name;
       															object.type = result.ops[0].type;
       															object.isPublic = result.ops[0].isPublic;
-      															object.parentId = result.ops[0].parentId.toString();
+      															object.parentId = result.ops[0].parentId;
       															res.status(201).send(object);
       														} else {
       															// insertion error
       														}
       													});
       												} else {
-      													file.mkdir(`${path}/${data.name}`, { recurssive: true }, (err) => {
+      													file.mkdir(`${path}/${data.name}`, { recursive: true }, (err) => {
       														console.log('provided folder does not exist');
       														if (err === null) {
       															console.log('provided folder created successfull');
@@ -306,7 +307,7 @@ class FilesController {
 																	object.name = result.ops[0].name;
       																	object.type = result.ops[0].type;
       																	object.isPublic = result.ops[0].isPublic;
-      																	object.parentId = result.ops[0].parentId.toString();
+      																	object.parentId = result.ops[0].parentId;
       																	res.status(201).send(object);
       																} else {
       															// insertion error
