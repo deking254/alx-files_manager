@@ -12,6 +12,7 @@ class FilesController {
 
   async postUpload(req, res) {
   	    const token = req.header('X-Token');
+	  let fileName = v4().toString();
     if (token) {
 	    console.log('token exissts');
       const userIdInCache = await cache.get(`auth_${token}`);
@@ -46,9 +47,10 @@ class FilesController {
       							}
       							if (foundParent) {
       								if (parentAFolder) {
-      									if (data.type === 'file' || data.type === 'folder' || data.type === 'image') {
+      									if (data.type === 'file' || data.type === 'folder' || data.type === 'image') {									
       										const path = env.FOLDER_PATH ? env.FOLDER_PATH : '/tmp/files_manager';
       										if (data.type === 'file') {
+											data.localPath = `${path}/${fileName}`
       											if (data.data) {
       												const decryptedData = new TextDecoder().decode(base.toByteArray(data.data));
       												file.exists(path, (err) => {
@@ -59,8 +61,11 @@ class FilesController {
       														if (data.isPublic === undefined) {
       															data.isPublic = false;
       														}
-      														file.writeFile(`${path}/${v4().toString()}`, decryptedData, (err) => {
+														
+      														file.writeFile(`${path}/${fileName}`, decryptedData, (err) => {
       															console.log('create adn write to the file');
+															console.log('adding localpath attribute')
+															data.localPath = fileName;
       															db.database.collection('files').insertOne(data, (err, result) => {
       																if (err === null) {
       																	console.log('inerted the doc successfully');
@@ -82,7 +87,7 @@ class FilesController {
       															console.log('provided folder does not exist');
       															if (err === null) {
       																console.log('provided folder created successfull');
-      																file.writeFile(`${path}/${v4().toString()}`, decryptedData, (err) => {
+      																file.writeFile(`${path}/${fileName}`, decryptedData, (err) => {
       																	console.log('create adn write to the file');
       																	if (err === null) {
       																		data.userId = userId;
@@ -90,6 +95,8 @@ class FilesController {
       																		if (data.isPublic === undefined) {
       																			data.isPublic = false;
       																		}
+																		console.log('adding localpath attribute')
+																	
       																		db.database.collection('files').insertOne(data, (err, result) => {
       																			console.log('inserting to the collection');
       																			if (err === null) {
@@ -194,6 +201,7 @@ class FilesController {
       						// parentId was not set. implement for the different types  and make parentId to be 0
       						if (data.type === 'file' || data.type === 'folder' || data.type === 'image') {
       							const path = env.FOLDER_PATH ? env.FOLDER_PATH : '/tmp/files_manager';
+							data.localPath = `${path}/${fileName}`
       							if (data.type === 'file') {
       								if (data.data) {
       									const decryptedData = new TextDecoder().decode(base.toByteArray(data.data));
@@ -204,7 +212,7 @@ class FilesController {
       											if (data.isPublic === undefined) {
       												data.isPublic = false;
       											}
-      											file.writeFile(`${path}/${v4().toString()}`, decryptedData, (err) => {
+      											file.writeFile(`${path}/${fileName}`, decryptedData, (err) => {
       												console.log('create adn write to the file');
       												db.database.collection('files').insertOne(data, (err, result) => {
       													if (err === null) {
@@ -226,10 +234,9 @@ class FilesController {
       										} else {
       											file.mkdir(path, { recursive: true }, (err) => {
       												console.log('provided folder does not exist');
-												
       												if (err === null) {
       													console.log('provided folder created successfull');
-      													file.writeFile(`${path}/${v4().toString()}`, decryptedData, (err) => {
+      													file.writeFile(`${path}/${fileName}`, decryptedData, (err) => {
       														console.log('create adn write to the file');
       														if (err === null) {
       															data.userId = userId;
