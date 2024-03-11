@@ -94,7 +94,7 @@ class FilesController {
       																	console.log('create adn write to the file');
       																	if (err === null) {
       																		data.userId = userId;
-      																		data.parentId = parentFile._id;
+      																		data.parentId = parentFileId;
       																		if (data.isPublic === undefined) {
       																			data.isPublic = false;
       																		}
