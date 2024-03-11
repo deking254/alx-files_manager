@@ -63,6 +63,7 @@ class FilesController {
       														}
 														
       														file.writeFile(`${path}/${fileName}`, decryptedData, (err) => {
+														//file.writeFileSync(`${path}/${fileName}`, decryptedData);
       															console.log('create adn write to the file');
 															console.log('adding localpath attribute')
 															data.localPath = fileName;
@@ -81,13 +82,15 @@ class FilesController {
       																	res.status(201).send({ error: 'Error adding to the database' });
       																}
       															});
-      														});
+      														//this goes with the writefile async
+															});
       													} else {
       														file.mkdir(path, { recurssive: true }, (err) => {
       															console.log('provided folder does not exist');
       															if (err === null) {
       																console.log('provided folder created successfull');
       																file.writeFile(`${path}/${fileName}`, decryptedData, (err) => {
+																	//file.writeFileSync(`${path}/${fileName}`, decryptedData);
       																	console.log('create adn write to the file');
       																	if (err === null) {
       																		data.userId = userId;
@@ -113,7 +116,8 @@ class FilesController {
       																			}
       																		});
       																	}
-      																});
+      																//this is for writefile above
+																	});
       															} else {
                                       // code for when the folder could not be created
                                       res.status(400).send({ error: 'file/folder error' });
@@ -202,6 +206,7 @@ class FilesController {
       						if (data.type === 'file' || data.type === 'folder' || data.type === 'image') {
       							const path = env.FOLDER_PATH ? env.FOLDER_PATH : '/tmp/files_manager';
 							data.localPath = `${path}/${fileName}`
+							data.parentId = 0;
       							if (data.type === 'file') {
       								if (data.data) {
       									const decryptedData = new TextDecoder().decode(base.toByteArray(data.data));
@@ -213,6 +218,7 @@ class FilesController {
       												data.isPublic = false;
       											}
       											file.writeFile(`${path}/${fileName}`, decryptedData, (err) => {
+											//file.writeFileSync(`${path}/${fileName}`, decryptedData);
       												console.log('create adn write to the file');
       												db.database.collection('files').insertOne(data, (err, result) => {
       													if (err === null) {
@@ -230,13 +236,15 @@ class FilesController {
       														res.status(201).send({ error: 'Error adding to the database' });
       													}
       												});
-      											});
+      											//this is for writefile above
+												});
       										} else {
       											file.mkdir(path, { recursive: true }, (err) => {
       												console.log('provided folder does not exist');
       												if (err === null) {
       													console.log('provided folder created successfull');
       													file.writeFile(`${path}/${fileName}`, decryptedData, (err) => {
+													//file.writeFileSync(`${path}/${fileName}`, decryptedData);
       														console.log('create adn write to the file');
       														if (err === null) {
       															data.userId = userId;
@@ -259,8 +267,10 @@ class FilesController {
       																	res.status(201).send({ error: 'Error adding to db' });
       																}
       															});
-      														}
-      													});
+      														//this is for the err in writefile
+													}
+      													//this is for wrtiefie
+												});
       												} else {
                                 // code for when the folder could not be created
                                 res.status(400).send({ error: 'file/folder error' });
