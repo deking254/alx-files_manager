@@ -66,7 +66,6 @@ class FilesController {
 														//file.writeFileSync(`${path}/${fileName}`, decryptedData);
       															console.log('create adn write to the file');
 															console.log('adding localpath attribute')
-															data.localPath = fileName;
       															db.database.collection('files').insertOne(data, (err, result) => {
       																if (err === null) {
       																	console.log('inerted the doc successfully');
