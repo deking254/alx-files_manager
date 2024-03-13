@@ -4,6 +4,7 @@ const { v4 } = require('uuid');
 const base = require('base64-js');
 const cache = require('../utils/redis');
 const db = require('../utils/db');
+const ObjectId = require('bson').ObjectId
 
 class FilesController {
   constructor() {
@@ -365,6 +366,85 @@ class FilesController {
 	    res.status(401).send({ error: 'Unauthorized' });
     }
   }
+
+  async getShow(req, res){
+   let userToken = req.header('X-Token');
+   let id = req.params.id;
+	  console.log(`${id} = id in param`);
+   if (userToken){
+	   console.log('usertoken was added')
+     let userId = await cache.get('auth_' + userToken);
+	   console.log(userId);
+     if (userId){
+       if (id){
+         db.database.collection('files').find({}).toArray((err, result)=>{
+	   let files = []
+	   let found = false;
+           for (let i = 0; i < result.length; i++){
+	     if (result[i]._id.toString() === req.params.id){
+               let file = {};
+	       found = true;
+               file.id = result[i]._id.toString();
+               file.name =  result[i].name;
+	       file.userId = result[i].userId.toString();
+	       file.type = result[i].type;
+	       file.isPublic = result[i].isPublic;
+	       file.parentId = result[i].parentId.toString();
+	       res.status(201).send(file);
+	     }
+	   }
+	   if (found === false){
+             res.status(404).send({"error": "Not found"})
+	   }
+         })
+       }
+     }else{
+	res.status(401).send({"error": 'Unauthorized'});
+     }
+
+   }else{
+    res.status(401).send({"error": 'Unauthorized'});
+   }
+
+  }
+
+
+
+
+  async getIndex(req, res){
+   let userToken = req.header('X-Token');
+   let id = req.query.parentId || 0;
+   let page = req.query.page || 0;
+          console.log(`${id} = paramid in param`);
+	  console.log(`${page} = page in param`);
+   if (userToken){
+           console.log('usertoken was added')
+     let userId = await cache.get('auth_' + userToken);
+           console.log(userId);
+     if (userId){
+       if (id || id === 0){
+	  let idObject;
+	  if (id){
+            idObject = ObjectId(id);
+	  }
+         db.database.collection('files').find({parentId: idObject || 0}).skip(page * 20).limit(20).toArray((err, result)=>{
+           if (err === null){
+		   console.log(result.length);
+	     res.status(202).send(result);
+	   }
+         })
+       }
+     }else{
+        res.status(401).send({"error": 'Unauthorized'});
+     }
+
+   }else{
+    res.status(401).send({"error": 'Unauthorized'});
+   }
+
+  }
+
+ 
 }
 const fileCtrlr = new FilesController();
-module.exports = fileCtrlr;
+module.exports = fileCtrlr; 

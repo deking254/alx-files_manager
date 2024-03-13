@@ -36,4 +36,10 @@ router.get('/users/me', (req, res)=>{
 router.post('/files', (req, res)=>{
   fileCtrl.postUpload(req, res);
 })
+router.get('/files/:id', (req, res)=>{
+  fileCtrl.getShow(req, res);
+})
+router.get('/files', (req, res)=>{
+  fileCtrl.getIndex(req, res);
+})
 module.exports = router;
