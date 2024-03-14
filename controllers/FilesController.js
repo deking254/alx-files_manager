@@ -385,7 +385,14 @@ class FilesController {
            for (let i = 0; i < result.length; i++){
 	     if (result[i]._id.toString() === req.params.id){
 	       found = true;
-	       res.status(201).send(result[i]);
+	       let object = {}
+	       object.id = result[i]._id;
+	       object.userId = result[i].userId;
+               object.name = result[i].name;
+	       object.type = result[i].type;
+	       object.isPublic = result[i].isPublic;
+	       object.parentId = result[i].parentId;
+	       res.status(200).send(object);
 	       break;
 	     }
 	   }
@@ -423,10 +430,22 @@ class FilesController {
 	  if (id){
             idObject = ObjectId(id);
 	  }
-         db.database.collection('files').find({parentId: idObject || 0 }, {userId: ObjectId(userId)}).skip(page * 20).limit(20).toArray((err, result)=>{
+         db.database.collection('files').find({'parentId': idObject || 0, 'userId': ObjectId(userId)}).skip(page * 20).limit(20).toArray((err, result)=>{
+           let files = []
            if (err === null){
-		   console.log(result.length);
-	     res.status(202).send(result);
+	     if (result.length > 0){
+               for (let i = 0; i < result.length; i++){
+                 let object = {};
+		 object.id = result[i]._id;
+                 object.userId = result[i].userId;
+                 object.name = result[i].name;
+                 object.type = result[i].type;
+                 object.isPublic = result[i].isPublic;
+                 object.parentId = result[i].parentId;
+		 files.push(object);
+	       }
+	     }
+	     res.status(200).send(files);
 	   }
          })
        }
