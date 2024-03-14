@@ -368,6 +368,7 @@ class FilesController {
   }
 
   async getShow(req, res){
+	  console.log('endpoint works');
    let userToken = req.header('X-Token');
    let id = req.params.id;
 	  console.log(`${id} = id in param`);
@@ -377,20 +378,15 @@ class FilesController {
 	   console.log(userId);
      if (userId){
        if (id){
-         db.database.collection('files').find({}).toArray((err, result)=>{
+         db.database.collection('files').find({'userId': ObjectId(userId)}).toArray((err, result)=>{
 	   let files = []
 	   let found = false;
+		 console.log(result);
            for (let i = 0; i < result.length; i++){
 	     if (result[i]._id.toString() === req.params.id){
-               let file = {};
 	       found = true;
-               file.id = result[i]._id.toString();
-               file.name =  result[i].name;
-	       file.userId = result[i].userId.toString();
-	       file.type = result[i].type;
-	       file.isPublic = result[i].isPublic;
-	       file.parentId = result[i].parentId.toString();
-	       res.status(201).send(file);
+	       res.status(201).send(result[i]);
+	       break;
 	     }
 	   }
 	   if (found === false){
@@ -427,7 +423,7 @@ class FilesController {
 	  if (id){
             idObject = ObjectId(id);
 	  }
-         db.database.collection('files').find({parentId: idObject || 0}).skip(page * 20).limit(20).toArray((err, result)=>{
+         db.database.collection('files').find({parentId: idObject || 0 }, {userId: ObjectId(userId)}).skip(page * 20).limit(20).toArray((err, result)=>{
            if (err === null){
 		   console.log(result.length);
 	     res.status(202).send(result);
