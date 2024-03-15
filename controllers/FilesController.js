@@ -31,6 +31,7 @@ class FilesController {
       		if (foundUser) {
       			req.on('data', (dat) => {
       				const data = JSON.parse(dat);
+				console.log(data);
       				if (data.name) {
       					if (data.parentId) {
       						db.database.collection('files').find({}).toArray((err, result) => {
@@ -416,8 +417,8 @@ class FilesController {
 
   async getIndex(req, res){
    let userToken = req.header('X-Token');
-   let id = req.query.parentId || 0;
-   let page = req.query.page || 0;
+   let id = req.query.parentId;
+   let page = req.query.page || "0";
           console.log(`${id} = paramid in param`);
 	  console.log(`${page} = page in param`);
    if (userToken){
@@ -425,30 +426,44 @@ class FilesController {
      let userId = await cache.get('auth_' + userToken);
            console.log(userId);
      if (userId){
-       if (id || id === 0){
-	  let idObject;
-	  if (id){
-            idObject = ObjectId(id);
-	  }
-         db.database.collection('files').find({'parentId': idObject || 0, 'userId': ObjectId(userId)}).skip(page * 20).limit(20).toArray((err, result)=>{
-           let files = []
-           if (err === null){
-	     if (result.length > 0){
-               for (let i = 0; i < result.length; i++){
-                 let object = {};
-		 object.id = result[i]._id;
-                 object.userId = result[i].userId;
-                 object.name = result[i].name;
-                 object.type = result[i].type;
-                 object.isPublic = result[i].isPublic;
-                 object.parentId = result[i].parentId;
-		 files.push(object);
+	        let idObject;
+	        let paramIdNotValid = false;
+	        if (id){
+	          if (id === "0"){
+		   idObject = 0;
+		  }
+                  try{
+                   idObject = ObjectId(id);
+		  }catch(e){
+		   paramIdNotValid = true;
+		  }
+		}else{
+                   idObject = 0;
+		}
+	       if (!paramIdNotValid){
+		       console.log(`${idObject} id object`)
+		db.database.collection('files').find({"parentId": idObject, "userId": ObjectId(userId)}).skip(parseInt(page) * 20).limit(20).toArray((err, result)=>{
+           	let files = []
+                 console.log(result.length);
+           	if (err === null){
+             	  if (result.length > 0){
+               	    for (let i = 0; i < result.length; i++){
+                      let object = {};
+                      object.id = result[i]._id;
+                      object.userId = result[i].userId;
+                      object.name = result[i].name;
+                      object.type = result[i].type;
+                      object.isPublic = result[i].isPublic;
+                      object.parentId = result[i].parentId;
+                      files.push(object);
+                    }
+                  }
+                  res.status(200).send(files);
+                }
+               })
+	       }else{
+                  res.status(401).send({"error": 'Not valid'});
 	       }
-	     }
-	     res.status(200).send(files);
-	   }
-         })
-       }
      }else{
         res.status(401).send({"error": 'Unauthorized'});
      }
