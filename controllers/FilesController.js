@@ -417,32 +417,15 @@ class FilesController {
 
   async getIndex(req, res){
    let userToken = req.header('X-Token');
-   let id = req.query.parentId;
    let page = req.query.page || "0";
-          console.log(`${id} = paramid in param`);
-	  console.log(`${page} = page in param`);
    if (userToken){
            console.log('usertoken was added')
      let userId = await cache.get('auth_' + userToken);
            console.log(userId);
      if (userId){
-	        let idObject;
-	        let paramIdNotValid = false;
-	        if (id){
-	          if (id === "0"){
-		   idObject = 0;
-		  }
-                  try{
-                   idObject = ObjectId(id);
-		  }catch(e){
-		   paramIdNotValid = true;
-		  }
-		}else{
-                   idObject = 0;
-		}
-	       if (!paramIdNotValid){
-		       console.log(`${idObject} id object`)
-		db.database.collection('files').find({"parentId": idObject, "userId": ObjectId(userId)}).skip(parseInt(page) * 20).limit(20).toArray((err, result)=>{
+	     let paramId = this.getParamId(req);
+	       if(paramId){
+		db.database.collection('files').find({"parentId": paramId, "userId": ObjectId(userId)}).skip(parseInt(page) * 20).limit(20).toArray((err, result)=>{
            	let files = []
                  console.log(result.length);
            	if (err === null){
@@ -457,12 +440,30 @@ class FilesController {
                       object.parentId = result[i].parentId;
                       files.push(object);
                     }
-                  }
+		  }
                   res.status(200).send(files);
                 }
                })
 	       }else{
-                  res.status(401).send({"error": 'Not valid'});
+                db.database.collection('files').find({"userId": ObjectId(userId)}).skip(parseInt(page) * 20).limit(20).toArray((err, result)=>{
+                let files = []
+                 console.log(result.length);
+                if (err === null){
+                  if (result.length > 0){
+                    for (let i = 0; i < result.length; i++){
+                      let object = {};
+                      object.id = result[i]._id;
+                      object.userId = result[i].userId;
+                      object.name = result[i].name;
+                      object.type = result[i].type;
+                      object.isPublic = result[i].isPublic;
+                      object.parentId = result[i].parentId;
+                      files.push(object);
+                    }
+                  }
+                  res.status(200).send(files);
+                }
+               })                 
 	       }
      }else{
         res.status(401).send({"error": 'Unauthorized'});
@@ -472,6 +473,19 @@ class FilesController {
     res.status(401).send({"error": 'Unauthorized'});
    }
 
+  }
+  getParamId(req){
+    let id = req.query.parentId;
+    if (id){
+      try{
+        let paramId = ObjectId(id);
+        return paramId;
+      }catch(e){
+        return id;
+      }
+    }else{
+      return false;
+    }
   }
 
  
