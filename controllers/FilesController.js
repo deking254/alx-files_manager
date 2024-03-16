@@ -491,12 +491,23 @@ class FilesController {
     if (userId){
 	    console.log(userId);
     const { id } = req.params;
-      db.database.collection('files').find({"_id": ObjectId(id), "userId": Object(userId)}).toArray((err, file)=>{
+      db.database.collection('files').find({"_id": ObjectId(id), "userId": ObjectId(userId)}).toArray((err, file)=>{
 	if (err === null){
-	  if (file.length >== 1){
-          db.database.collection('files').updateOne({"_id": ObjectId(id), "userId": Object(userId)}, {$set:{"isPublic": true}}, (err, result)=>{
+	  if (file.length >= 1){
+          db.database.collection('files').updateOne({"_id": ObjectId(id), "userId": ObjectId(userId)}, {$set:{"isPublic": true}}, (err, result)=>{
           if (err === null){
-            res.status(200).send(file[0]);
+            db.database.collection('files').find({"_id": ObjectId(id), "userId": ObjectId(userId)}).toArray((err, modified)=>{
+              if (err === null){
+                let object = {};
+                object.id = modified[0]._id;
+                object.name = modified[0].name;
+                object.userId = modified[0].userId;
+                object.type = modified[0].type;
+                object.isPublic = modified[0].isPublic;
+                object.parentId = modified[0].parentId;	      
+                res.status(200).send(object);
+              }
+            })
           }
 	})
 	  }else{
@@ -518,12 +529,23 @@ class FilesController {
     if (userId){
             console.log(userId);
     const { id } = req.params;
-      db.database.collection('files').find({"_id": ObjectId(id), "userId": Object(userId)}).toArray((err, file)=>{
+      db.database.collection('files').find({"_id": ObjectId(id), "userId": ObjectId(userId)}).toArray((err, file)=>{
         if (err === null){
-          if (file.length >== 1){
-          db.database.collection('files').updateOne({"_id": ObjectId(id), "userId": Object(userId)}, {$set:{"isPublic": false}}, (err, result)=>{
+          if (file.length >= 1){
+          db.database.collection('files').updateOne({"_id": ObjectId(id), "userId": ObjectId(userId)}, {$set:{"isPublic": false}}, (err, result)=>{
           if (err === null){
-            res.status(200).send(file[0]);
+	    db.database.collection('files').find({"_id": ObjectId(id), "userId": ObjectId(userId)}).toArray((err, modified)=>{
+	      if (err === null){
+		let object = {};
+		object.id = modified[0]._id;
+		object.name = modified[0].name;
+		object.userId = modified[0].userId;
+		object.type = modified[0].type;
+		object.isPublic = modified[0].isPublic;
+		object.parentId = modified[0].parentId;
+                res.status(200).send(object);
+	      }
+	    })
           }
         })
           }else{
