@@ -48,4 +48,7 @@ router.put('/files/:id/publish', (req, res)=>{
 router.put('/files/:id/unpublish', (req, res)=>{
   fileCtrl.putUnpublish(req, res);
 })
+router.get('/files/:id/data', (req, res)=>{
+  fileCtrl.getFile(req, res);
+})
 module.exports = router;

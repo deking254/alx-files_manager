@@ -559,6 +559,48 @@ class FilesController {
      res.status(401).send({"error": "Unauthorized"});
     }
   }
+
+
+  async getFile(req, res){
+    let token = req.header('X-Token');
+    let userId = await cache.get('auth_' + token);
+    if (userId){
+	    console.log(`id is ${req.params.id}`);
+      db.database.collection('files').find({"_id": ObjectId(req.params.id), "userId": ObjectId(userId)}).toArray((err, result)=>{
+        if (err === null){
+          if (result.length > 0){
+	    if (result[0].isPublic){
+		if (result[0].type !== 'folder'){
+                  file.exists(result[0].localPath, async (exists)=>{
+                    if (exists){
+			    console.log(result[0].localPath);
+                      let readStream = await file.ReadStream(result[0].localPath)
+			    let bufferArray = await readStream.read();
+			    console.log(bufferArray);
+		      res.status(200).send(bufferArray.toString());
+		    }else{
+			    console.log("localpath not existent")
+                      res.status(404).send({"error": "Not found"});
+		    }
+		  })       
+		}else{
+                  res.status(400).send({"error": "A folder doesn't have content"})
+		}
+	    }else{
+		    console.log("not public")
+	      res.status(404).send({"error": "Not found"});
+	    }
+	  }else{
+             console.log("length of result == 0")
+            res.status(404).send({"error": "Not found"});
+	  }
+	}
+      })
+    }else{
+	    console.log("unautho")
+      res.status(404).send({"error": "Not found"});
+    }
+  }
 }
 const fileCtrlr = new FilesController();
 module.exports = fileCtrlr;
