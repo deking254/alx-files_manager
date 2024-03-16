@@ -42,4 +42,10 @@ router.get('/files/:id', (req, res)=>{
 router.get('/files', (req, res)=>{
   fileCtrl.getIndex(req, res);
 })
+router.put('/files/:id/publish', (req, res)=>{
+  fileCtrl.putPublish(req, res);
+})
+router.put('/files/:id/unpublish', (req, res)=>{
+  fileCtrl.putUnpublish(req, res);
+})
 module.exports = router;

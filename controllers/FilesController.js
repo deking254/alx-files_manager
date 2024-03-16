@@ -2,9 +2,9 @@ const file = require('fs');
 const { env } = require('process');
 const { v4 } = require('uuid');
 const base = require('base64-js');
+const { ObjectId } = require('bson');
 const cache = require('../utils/redis');
 const db = require('../utils/db');
-const ObjectId = require('bson').ObjectId
 
 class FilesController {
   constructor() {
@@ -13,7 +13,7 @@ class FilesController {
 
   async postUpload(req, res) {
   	    const token = req.header('X-Token');
-	  let fileName = v4().toString();
+	  const fileName = v4().toString();
     if (token) {
 	    console.log('token exissts');
       const userIdInCache = await cache.get(`auth_${token}`);
@@ -31,7 +31,7 @@ class FilesController {
       		if (foundUser) {
       			req.on('data', (dat) => {
       				const data = JSON.parse(dat);
-				console.log(data);
+              console.log(data);
       				if (data.name) {
       					if (data.parentId) {
       						db.database.collection('files').find({}).toArray((err, result) => {
@@ -49,10 +49,10 @@ class FilesController {
       							}
       							if (foundParent) {
       								if (parentAFolder) {
-      									if (data.type === 'file' || data.type === 'folder' || data.type === 'image') {									
+      									if (data.type === 'file' || data.type === 'folder' || data.type === 'image') {
       										const path = env.FOLDER_PATH ? env.FOLDER_PATH : '/tmp/files_manager';
       										if (data.type === 'file') {
-											data.localPath = `${path}/${fileName}`
+                            data.localPath = `${path}/${fileName}`;
       											if (data.data) {
       												const decryptedData = new TextDecoder().decode(base.toByteArray(data.data));
       												file.exists(path, (err) => {
@@ -63,11 +63,11 @@ class FilesController {
       														if (data.isPublic === undefined) {
       															data.isPublic = false;
       														}
-														
+
       														file.writeFile(`${path}/${fileName}`, decryptedData, (err) => {
-														//file.writeFileSync(`${path}/${fileName}`, decryptedData);
+                                    // file.writeFileSync(`${path}/${fileName}`, decryptedData);
       															console.log('create adn write to the file');
-															console.log('adding localpath attribute')
+                                    console.log('adding localpath attribute');
       															db.database.collection('files').insertOne(data, (err, result) => {
       																if (err === null) {
       																	console.log('inerted the doc successfully');
@@ -75,7 +75,7 @@ class FilesController {
       																	object.id = result.ops[0]._id;
       																	object.userId = result.ops[0].userId.toString();
       																	object.type = result.ops[0].type;
-																	object.name = result.ops[0].name;
+                                        object.name = result.ops[0].name;
       																	object.isPublic = result.ops[0].isPublic;
       																	object.parentId = result.ops[0].parentId;
       																	res.status(201).send(object);
@@ -83,15 +83,15 @@ class FilesController {
       																	res.status(201).send({ error: 'Error adding to the database' });
       																}
       															});
-      														//this goes with the writefile async
-															});
+      														// this goes with the writefile async
+                                  });
       													} else {
       														file.mkdir(path, { recurssive: true }, (err) => {
       															console.log('provided folder does not exist');
       															if (err === null) {
       																console.log('provided folder created successfull');
       																file.writeFile(`${path}/${fileName}`, decryptedData, (err) => {
-																	//file.writeFileSync(`${path}/${fileName}`, decryptedData);
+                                        // file.writeFileSync(`${path}/${fileName}`, decryptedData);
       																	console.log('create adn write to the file');
       																	if (err === null) {
       																		data.userId = userId;
@@ -99,8 +99,8 @@ class FilesController {
       																		if (data.isPublic === undefined) {
       																			data.isPublic = false;
       																		}
-																		console.log('adding localpath attribute')
-																	
+                                          console.log('adding localpath attribute');
+
       																		db.database.collection('files').insertOne(data, (err, result) => {
       																			console.log('inserting to the collection');
       																			if (err === null) {
@@ -110,15 +110,15 @@ class FilesController {
       																				object.type = result.ops[0].type;
       																				object.isPublic = result.ops[0].isPublic;
       																				object.parentId = result.ops[0].parentId;
-																				object.name = result.ops[0].name;
+                                              object.name = result.ops[0].name;
       																				res.status(201).send(object);
       																			} else {
       																				res.status(201).send({ error: 'Error adding to db' });
       																			}
       																		});
       																	}
-      																//this is for writefile above
-																	});
+      																// this is for writefile above
+                                      });
       															} else {
                                       // code for when the folder could not be created
                                       res.status(400).send({ error: 'file/folder error' });
@@ -128,7 +128,7 @@ class FilesController {
       												});
       											} else {
       												// data missing
-												res.status(400).send({ error: 'Missing data' });
+                              res.status(400).send({ error: 'Missing data' });
       											}
       										}
       										if (data.type === 'folder') {
@@ -145,7 +145,7 @@ class FilesController {
       															const object = {};
       															object.id = result.ops[0]._id;
       															object.userId = result.ops[0].userId.toString();
-															object.name = result.ops[0].name;
+                                    object.name = result.ops[0].name;
       															object.type = result.ops[0].type;
       															object.isPublic = result.ops[0].isPublic;
       															object.parentId = result.ops[0].parentId;
@@ -170,7 +170,7 @@ class FilesController {
       																	object.id = result.ops[0]._id;
       																	object.userId = result.ops[0].userId.toString();
       																	object.type = result.ops[0].type;
-																	object.name = result.ops[0].name;
+                                        object.name = result.ops[0].name;
       																	object.isPublic = result.ops[0].isPublic;
       																	object.parentId = result.ops[0].parentId;
       																	res.status(201).send(object);
@@ -191,23 +191,23 @@ class FilesController {
       										}
       									} else {
       										// type not valid
-										res.status(400).send({ error: 'Missing type' });
+                          res.status(400).send({ error: 'Missing type' });
       									}
       								} else {
       									// parentNot a folder
-									res.status(400).send({ error: 'Parent is not a folder' });
+                        res.status(400).send({ error: 'Parent is not a folder' });
       								}
       							} else {
       								// parent not found
-								res.status(400).send({ error: 'Parent not found' });
+                      res.status(400).send({ error: 'Parent not found' });
       							}
       						});
       					} else {
       						// parentId was not set. implement for the different types  and make parentId to be 0
       						if (data.type === 'file' || data.type === 'folder' || data.type === 'image') {
       							const path = env.FOLDER_PATH ? env.FOLDER_PATH : '/tmp/files_manager';
-							data.localPath = `${path}/${fileName}`
-							data.parentId = 0;
+                    data.localPath = `${path}/${fileName}`;
+                    data.parentId = 0;
       							if (data.type === 'file') {
       								if (data.data) {
       									const decryptedData = new TextDecoder().decode(base.toByteArray(data.data));
@@ -219,7 +219,7 @@ class FilesController {
       												data.isPublic = false;
       											}
       											file.writeFile(`${path}/${fileName}`, decryptedData, (err) => {
-											//file.writeFileSync(`${path}/${fileName}`, decryptedData);
+                              // file.writeFileSync(`${path}/${fileName}`, decryptedData);
       												console.log('create adn write to the file');
       												db.database.collection('files').insertOne(data, (err, result) => {
       													if (err === null) {
@@ -228,7 +228,7 @@ class FilesController {
       														object.id = result.ops[0]._id;
                                   console.log(result.ops[0]);
       														object.userId = result.ops[0].userId.toString();
-														object.name = result.ops[0].name;
+                                  object.name = result.ops[0].name;
       														object.type = result.ops[0].type;
       														object.isPublic = result.ops[0].isPublic;
       														object.parentId = 0;
@@ -237,15 +237,15 @@ class FilesController {
       														res.status(201).send({ error: 'Error adding to the database' });
       													}
       												});
-      											//this is for writefile above
-												});
+      											// this is for writefile above
+                            });
       										} else {
       											file.mkdir(path, { recursive: true }, (err) => {
       												console.log('provided folder does not exist');
       												if (err === null) {
       													console.log('provided folder created successfull');
       													file.writeFile(`${path}/${fileName}`, decryptedData, (err) => {
-													//file.writeFileSync(`${path}/${fileName}`, decryptedData);
+                                  // file.writeFileSync(`${path}/${fileName}`, decryptedData);
       														console.log('create adn write to the file');
       														if (err === null) {
       															data.userId = userId;
@@ -260,7 +260,7 @@ class FilesController {
                                         console.log(result.ops[0]);
       																	object.userId = result.ops[0].userId.toString();
       																	object.type = result.ops[0].type;
-																	object.name = result.ops[0].name;
+                                        object.name = result.ops[0].name;
       																	object.isPublic = result.ops[0].isPublic;
       																	object.parentId = 0;
       																	res.status(201).send(object);
@@ -268,10 +268,10 @@ class FilesController {
       																	res.status(201).send({ error: 'Error adding to db' });
       																}
       															});
-      														//this is for the err in writefile
-													}
-      													//this is for wrtiefie
-												});
+      														// this is for the err in writefile
+                                  }
+      													// this is for wrtiefie
+                                });
       												} else {
                                 // code for when the folder could not be created
                                 res.status(400).send({ error: 'file/folder error' });
@@ -281,7 +281,7 @@ class FilesController {
       									});
       								} else {
       												// data missing
-									res.status(400).send({error: "Missing data"});
+                        res.status(400).send({ error: 'Missing data' });
       											}
       										}
       										if (data.type === 'folder') {
@@ -298,7 +298,7 @@ class FilesController {
       															const object = {};
       															object.id = result.ops[0]._id;
       															object.userId = result.ops[0].userId.toString();
-															object.name = result.ops[0].name;
+                              object.name = result.ops[0].name;
       															object.type = result.ops[0].type;
       															object.isPublic = result.ops[0].isPublic;
       															object.parentId = result.ops[0].parentId;
@@ -322,7 +322,7 @@ class FilesController {
       																	const object = {};
       																	object.id = result.ops[0]._id;
       																	object.userId = result.ops[0].userId.toString();
-																	object.name = result.ops[0].name;
+                                  object.name = result.ops[0].name;
       																	object.type = result.ops[0].type;
       																	object.isPublic = result.ops[0].isPublic;
       																	object.parentId = result.ops[0].parentId;
@@ -333,7 +333,7 @@ class FilesController {
       													});
       														} else {
                               // code for when the folder could not be created
-				console.log(err);
+                              console.log(err);
                               res.status(400).send({ error: 'file/folder error' });
                             }
                           });
@@ -345,21 +345,21 @@ class FilesController {
       										}
       						} else {
       							// type is not valid
-							res.status(400).send({ error: 'Missing type' });
+                    res.status(400).send({ error: 'Missing type' });
       						}
       					}
       				} else {
       					// name doesn not exists
-					res.status(400).send({ error: 'Missing name' });
+                res.status(400).send({ error: 'Missing name' });
       				}
       			});
       		} else {
       			// when the login user could not be found in the db
-			res.status(401).send({ error: 'Unauthorized' });
+            res.status(401).send({ error: 'Unauthorized' });
       		}
       	} else {
       		// no users
-		res.status(401).send({ error: 'Unauthorized' });
+          res.status(401).send({ error: 'Unauthorized' });
       	}
       });
     } else {
@@ -368,28 +368,28 @@ class FilesController {
     }
   }
 
-  async getShow(req, res){
+  async getShow(req, res) {
 	  console.log('endpoint works');
-   let userToken = req.header('X-Token');
-   let id = req.params.id;
+    const userToken = req.header('X-Token');
+    const { id } = req.params;
 	  console.log(`${id} = id in param`);
-   if (userToken){
-	   console.log('usertoken was added')
-     let userId = await cache.get('auth_' + userToken);
+    if (userToken) {
+	   console.log('usertoken was added');
+      const userId = await cache.get(`auth_${userToken}`);
 	   console.log(userId);
-     if (userId){
-       if (id){
-         db.database.collection('files').find({'userId': ObjectId(userId)}).toArray((err, result)=>{
-	   let files = []
+      if (userId) {
+        if (id) {
+          db.database.collection('files').find({ userId: ObjectId(userId) }).toArray((err, result) => {
+	   const files = [];
+		  console.log('tuko kwa get show');
 	   let found = false;
-		 console.log(result);
-           for (let i = 0; i < result.length; i++){
-	     if (result[i]._id.toString() === req.params.id){
+            for (let i = 0; i < result.length; i++) {
+	     if (result[i]._id.toString() === req.params.id) {
 	       found = true;
-	       let object = {}
+	       const object = {};
 	       object.id = result[i]._id;
 	       object.userId = result[i].userId;
-               object.name = result[i].name;
+                object.name = result[i].name;
 	       object.type = result[i].type;
 	       object.isPublic = result[i].isPublic;
 	       object.parentId = result[i].parentId;
@@ -397,98 +397,146 @@ class FilesController {
 	       break;
 	     }
 	   }
-	   if (found === false){
-             res.status(404).send({"error": "Not found"})
+	   if (found === false) {
+              res.status(404).send({ error: 'Not found' });
 	   }
-         })
-       }
-     }else{
-	res.status(401).send({"error": 'Unauthorized'});
-     }
-
-   }else{
-    res.status(401).send({"error": 'Unauthorized'});
-   }
-
-  }
-
-
-
-
-  async getIndex(req, res){
-   let userToken = req.header('X-Token');
-   let page = req.query.page || "0";
-   if (userToken){
-           console.log('usertoken was added')
-     let userId = await cache.get('auth_' + userToken);
-           console.log(userId);
-     if (userId){
-	     let paramId = this.getParamId(req);
-	       if(paramId){
-		db.database.collection('files').find({"parentId": paramId, "userId": ObjectId(userId)}).skip(parseInt(page) * 20).limit(20).toArray((err, result)=>{
-           	let files = []
-                 console.log(result.length);
-           	if (err === null){
-             	  if (result.length > 0){
-               	    for (let i = 0; i < result.length; i++){
-                      let object = {};
-                      object.id = result[i]._id;
-                      object.userId = result[i].userId;
-                      object.name = result[i].name;
-                      object.type = result[i].type;
-                      object.isPublic = result[i].isPublic;
-                      object.parentId = result[i].parentId;
-                      files.push(object);
-                    }
-		  }
-                  res.status(200).send(files);
-                }
-               })
-	       }else{
-                db.database.collection('files').find({"userId": ObjectId(userId)}).skip(parseInt(page) * 20).limit(20).toArray((err, result)=>{
-                let files = []
-                 console.log(result.length);
-                if (err === null){
-                  if (result.length > 0){
-                    for (let i = 0; i < result.length; i++){
-                      let object = {};
-                      object.id = result[i]._id;
-                      object.userId = result[i].userId;
-                      object.name = result[i].name;
-                      object.type = result[i].type;
-                      object.isPublic = result[i].isPublic;
-                      object.parentId = result[i].parentId;
-                      files.push(object);
-                    }
-                  }
-                  res.status(200).send(files);
-                }
-               })                 
-	       }
-     }else{
-        res.status(401).send({"error": 'Unauthorized'});
-     }
-
-   }else{
-    res.status(401).send({"error": 'Unauthorized'});
-   }
-
-  }
-  getParamId(req){
-    let id = req.query.parentId;
-    if (id){
-      try{
-        let paramId = ObjectId(id);
-        return paramId;
-      }catch(e){
-        return id;
+          });
+        }
+      } else {
+        res.status(401).send({ error: 'Unauthorized' });
       }
-    }else{
-      return false;
+    } else {
+      res.status(401).send({ error: 'Unauthorized' });
     }
   }
 
- 
+  async getIndex(req, res) {
+    const userToken = req.header('X-Token');
+    const page = req.query.page || '0';
+    if (userToken) {
+      console.log('usertoken was added');
+      const userId = await cache.get(`auth_${userToken}`);
+      console.log(userId);
+      if (userId) {
+	     const paramId = this.getParamId(req);
+	       if (paramId) {
+          db.database.collection('files').find({ parentId: paramId, userId: ObjectId(userId) }).skip(parseInt(page) * 20).limit(20)
+            .toArray((err, result) => {
+           	const files = [];
+              console.log(result.length);
+           	if (err === null) {
+             	  if (result.length > 0) {
+               	    for (let i = 0; i < result.length; i++) {
+                    const object = {};
+                    object.id = result[i]._id;
+                    object.userId = result[i].userId;
+                    object.name = result[i].name;
+                    object.type = result[i].type;
+                    object.isPublic = result[i].isPublic;
+                    object.parentId = result[i].parentId;
+                    files.push(object);
+                  }
+		  }
+                res.status(200).send(files);
+              }
+            });
+	       } else {
+          db.database.collection('files').find({ userId: ObjectId(userId) }).skip(parseInt(page) * 20).limit(20)
+            .toArray((err, result) => {
+              const files = [];
+              console.log(result.length);
+              if (err === null) {
+                if (result.length > 0) {
+                  for (let i = 0; i < result.length; i++) {
+                    const object = {};
+                    object.id = result[i]._id;
+                    object.userId = result[i].userId;
+                    object.name = result[i].name;
+                    object.type = result[i].type;
+                    object.isPublic = result[i].isPublic;
+                    object.parentId = result[i].parentId;
+                    files.push(object);
+                  }
+                }
+                res.status(200).send(files);
+              }
+            });
+	       }
+      } else {
+        res.status(401).send({ error: 'Unauthorized' });
+      }
+    } else {
+      res.status(401).send({ error: 'Unauthorized' });
+    }
+  }
+
+  getParamId(req) {
+    const id = req.query.parentId;
+    if (id) {
+      try {
+        const paramId = ObjectId(id);
+        return paramId;
+      } catch (e) {
+        return id;
+      }
+    } else {
+      return false;
+    }
+  }
+  
+
+  async putPublish(req, res){
+    let token = req.header('X-Token');
+    let userId = await cache.get('auth_' + token);
+    if (userId){
+	    console.log(userId);
+    const { id } = req.params;
+      db.database.collection('files').find({"_id": ObjectId(id), "userId": Object(userId)}).toArray((err, file)=>{
+	if (err === null){
+	  if (file.length >== 1){
+          db.database.collection('files').updateOne({"_id": ObjectId(id), "userId": Object(userId)}, {$set:{"isPublic": true}}, (err, result)=>{
+          if (err === null){
+            res.status(200).send(file[0]);
+          }
+	})
+	  }else{
+            res.status(404).send({"error": "Not found"});
+	  }
+       }else{
+        res.status(404).send({"error": "Not found"});
+       }
+      })
+    }else{
+     res.status(401).send({"error": "Unauthorized"});
+    }
+  }
+
+
+  async putUnpublish(req, res){
+    let token = req.header('X-Token');
+    let userId = await cache.get('auth_' + token);
+    if (userId){
+            console.log(userId);
+    const { id } = req.params;
+      db.database.collection('files').find({"_id": ObjectId(id), "userId": Object(userId)}).toArray((err, file)=>{
+        if (err === null){
+          if (file.length >== 1){
+          db.database.collection('files').updateOne({"_id": ObjectId(id), "userId": Object(userId)}, {$set:{"isPublic": false}}, (err, result)=>{
+          if (err === null){
+            res.status(200).send(file[0]);
+          }
+        })
+          }else{
+            res.status(404).send({"error": "Not found"});
+          }
+       }else{
+        res.status(404).send({"error": "Not found"});
+       }
+      })
+    }else{
+     res.status(401).send({"error": "Unauthorized"});
+    }
+  }
 }
 const fileCtrlr = new FilesController();
-module.exports = fileCtrlr; 
+module.exports = fileCtrlr;
