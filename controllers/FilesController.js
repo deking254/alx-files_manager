@@ -612,8 +612,29 @@ class FilesController {
 	}
       })
     }else{
-	    console.log("unautho")
-      res.status(404).send({"error": "Not found"});
+	db.database.collection('files').find({"_id": ObjectId(req.params.id)}).toArray((err, result)=>{
+          if (err === null){
+	   if (result.length > 0){
+            if (result[0].type !== 'folder'){
+              if (result[0].isPublic){
+                file.exists(result[0].localPath, async (exists)=>{
+                  if (exists){
+                    res.status(200).send(file.readFileSync(result[0].localPath).toString());
+		  }else{
+                    res.status(404).send({"error": "Not found"});
+		  }
+		})
+	      }else{
+                res.status(404).send({"error": "Not found"});
+	      }
+	    }else{
+	      res.status(400).send({"error": "A folder doesn't have content"})
+	    }
+	   }else{
+             res.status(404).send({"error": "Not found"});
+	   }
+	  }
+	})
     }
   }
 }
