@@ -628,7 +628,11 @@ class FilesController {
                 res.status(404).send({"error": "Not found"});
 	      }
 	    }else{
-	      res.status(400).send({"error": "A folder doesn't have content"})
+	      if (result[0].isPublic){
+                res.status(400).send({"error": "A folder doesn't have content"})
+	      }else{
+	        res.status(400).send({"error": "Not found"})
+	      }
 	    }
 	   }else{
              res.status(404).send({"error": "Not found"});
