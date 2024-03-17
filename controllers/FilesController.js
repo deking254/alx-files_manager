@@ -566,7 +566,7 @@ class FilesController {
     let userId = await cache.get('auth_' + token);
     if (userId){
 	    console.log(`id is ${req.params.id}`);
-      db.database.collection('files').find({"_id": ObjectId(req.params.id), "userId": ObjectId(userId)}).toArray((err, result)=>{
+      db.database.collection('files').find({"_id": ObjectId(req.params.id)}).toArray((err, result)=>{
         if (err === null){
           if (result.length > 0){
 	    if (result[0].isPublic){
@@ -583,8 +583,25 @@ class FilesController {
                   res.status(400).send({"error": "A folder doesn't have content"})
 		}
 	    }else{
-		    console.log("not public")
-	      res.status(404).send({"error": "Not found"});
+	      if (ObjectId(userId) === result[0].userId){
+                if (result[0].type !== 'folder'){
+			console.log('sio public so now we check if he owns the found file')
+			console.log(result[0].localPath)
+                  file.exists(result[0].localPath, async (exists)=>{
+                    if (exists){
+                      res.status(200).send(file.readFileSync(result[0].localPath).toString());
+                    }else{
+                            console.log("localpath not existent")
+                      res.status(404).send({"error": "Not found"});
+                    }
+                  })
+                }else{
+                  res.status(400).send({"error": "A folder doesn't have content"})
+                }		     
+	      }else{
+		console.log('yoou are not the owner and its not public');
+	        res.status(404).send({"error": "Not found"});
+              }
 	    }
 	  }else{
              console.log("length of result == 0")
