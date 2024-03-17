@@ -573,11 +573,7 @@ class FilesController {
 		if (result[0].type !== 'folder'){
                   file.exists(result[0].localPath, async (exists)=>{
                     if (exists){
-			    console.log(result[0].localPath);
-                      let readStream = await file.ReadStream(result[0].localPath)
-			    let bufferArray = await readStream.read();
-			    console.log(bufferArray);
-		      res.status(200).send(bufferArray.toString());
+		      res.status(200).send(file.readFileSync(result[0].localPath).toString());
 		    }else{
 			    console.log("localpath not existent")
                       res.status(404).send({"error": "Not found"});
