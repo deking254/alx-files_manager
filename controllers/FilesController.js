@@ -583,7 +583,9 @@ class FilesController {
                   res.status(400).send({"error": "A folder doesn't have content"})
 		}
 	    }else{
-	      if (ObjectId(userId) === result[0].userId){
+		    console.log(`THE LOGGED IN USERID IS ${userId}`)
+		    console.log(`THE FOUND FILE BELONGS TO ${result[0].userId.toString()}`)
+	      if (userId === result[0].userId.toString()){
                 if (result[0].type !== 'folder'){
 			console.log('sio public so now we check if he owns the found file')
 			console.log(result[0].localPath)
